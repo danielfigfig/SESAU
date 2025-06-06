@@ -785,6 +785,801 @@
             }
             if (showMsg) {
                 const statusTarget = mentalHealthFormStatusDiv || globalStatusMessageDiv;
+                showStatusMessage(statusTarget, 'Ficha de Saúde Mental limpa!', 'success');<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escala de Risco Familiar Coelho-Savassi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jsPDF library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+        .modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #ffffff; margin: 5% auto; padding: 24px;
+            border-radius: 8px; width: 90%; max-width: 768px; /* md:max-w-3xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .close-button {
+            color: #aaa; float: right; font-size: 28px;
+            font-weight: bold; cursor: pointer;
+        }
+        .close-button:hover, .close-button:focus {
+            color: black; text-decoration: none;
+        }
+        .table th, .table td {
+            padding: 6px 8px; 
+            border: 1px solid #e5e7eb; 
+            vertical-align: middle;
+            font-size: 0.8rem; 
+        }
+        .table th {
+            background-color: #f9fafb; 
+            font-weight: 600; 
+        }
+        input[type="number"], input[type="text"], select, textarea {
+            border: 1px solid #d1d5db; 
+            border-radius: 0.375rem; 
+            padding: 0.4rem 0.6rem; 
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 0.8rem; 
+        }
+        .multiplicador-input {
+            width: 60px !important; 
+            padding: 0.4rem;
+        }
+        /* Styling for radio button groups */
+        .radio-group {
+            display: flex;
+            gap: 10px; /* Space between radio buttons */
+            align-items: center;
+        }
+        .radio-group label { /* Default label size */
+            margin-left: 4px; 
+            font-size: 0.8rem;
+        }
+        .radio-group input[type="radio"] { /* Default radio size */
+            width: auto; 
+            accent-color: #3b82f6; 
+        }
+
+        /* Custom larger radio buttons and labels */
+        .radio-group input[type="radio"].custom-radio-lg {
+            width: 1.15rem; /* Tailwind w-5 approx */
+            height: 1.15rem; /* Tailwind h-5 approx */
+        }
+        .radio-group label.custom-label-lg {
+            font-size: 0.9rem; /* Tailwind text-sm approx */
+            margin-left: 6px; 
+        }
+
+
+        input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
+            outline: 2px solid transparent; outline-offset: 2px;
+            border-color: #2563eb; box-shadow: 0 0 0 2px #3b82f6;
+        }
+        .btn {
+            padding: 0.6rem 1.2rem; 
+            border-radius: 0.375rem;
+            font-weight: 500; cursor: pointer; transition: background-color 0.2s;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; 
+        }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-primary:disabled { background-color: #9ca3af; cursor: not-allowed; }
+        .btn-secondary { background-color: #6b7280; color: white; }
+        .btn-secondary:hover { background-color: #4b5563; }
+        .btn-danger { background-color: #ef4444; color: white; } /* Red for clear/delete */
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-success { background-color: #10b981; color: white; } /* Green for print */
+        .btn-success:hover { background-color: #059669; }
+        .btn-warning { background-color: #f59e0b; color: white; } /* Amber for clear specific form */
+        .btn-warning:hover { background-color: #d97706; }
+
+
+        .custom-checkbox { margin-right: 0.5rem; }
+        .spinner { /* Kept for potential future use, but save buttons are removed */
+            width: 1rem; height: 1rem; border-width: 2px;
+            border-style: solid; border-color: currentColor;
+            border-right-color: transparent; border-radius: 50%;
+            display: inline-block; animation: spin 0.75s linear infinite;
+            margin-left: 0.5rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-message {
+            padding: 0.5rem 1rem; margin-top: 0.5rem;
+            border-radius: 0.375rem; font-size: 0.875rem; text-align: center;
+        }
+        .status-success { background-color: #d1fae5; color: #065f46; }
+        .status-error { background-color: #fee2e2; color: #991b1b; }
+        
+        #row_densidade_domiciliar label {
+            font-size: 0.75rem; 
+        }
+        #row_densidade_domiciliar input[type="number"] {
+             width: 50px !important; 
+             padding: 0.3rem;
+        }
+        .fixed-multiplier-text {
+            font-size: 0.8rem;
+            color: #4b5563; 
+            text-align: center;
+        }
+        .form-label {
+            display: block; 
+            /* text-sm;  Replaced by Tailwind class */
+            /* font-medium; Replaced by Tailwind class */
+            /* text-gray-700; Replaced by Tailwind class */
+            margin-bottom: 0.25rem; /* Equivalent to mb-1 */
+        }
+        .header-logo {
+            max-width: 200px; /* Ajuste o tamanho máximo conforme necessário */
+            max-height: 70px; /* Ajuste a altura máxima conforme necessário */
+            margin-top: 0.5rem; /* mb-2 */
+            margin-bottom: 0.5rem; /* mb-2 */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+
+    <div class="container mx-auto max-w-6xl"> 
+        <header class="mb-6 text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Escala de Risco Familiar de Coelho-Savassi</h1>
+            <!-- Logótipo Adicionado Aqui -->
+            <div class="flex justify-center my-3">
+                 <img src="https://placehold.co/300x80/02407e/FFFFFF?text=SESAU+AQUIDAUANA&font=raleway" alt="Logótipo da Instituição" class="header-logo">
+                <!-- 
+                     INSTRUÇÃO IMPORTANTE: 
+                     Substitua o URL acima em "src" pelo URL real do seu logótipo.
+                     Por exemplo: src="URL_DO_SEU_LOGO_AQUI.png" 
+                     A imagem de exemplo é: Logo SESAU - Copia.jpg que você carregou.
+                     Você pode ajustar as classes 'max-w-xs' (largura máxima) e 'h-auto' (altura automática)
+                     ou usar CSS personalizado na classe 'header-logo' para dimensionar o seu logótipo.
+                 -->
+            </div>
+            <p class="text-gray-600 mt-1">Dev.: Enf. Daniel F. Marmol - Coord. Saúde Digital (adaptado para web)</p>
+            <div class="text-gray-600 mt-1 text-sm">
+                <a href="https://wa.me/5567992178731" target="_blank" class="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-whatsapp mr-2" viewBox="0 0 16 16">
+                        <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943s-.182-.15-.38-.25z"/>
+                    </svg>
+                    Dúvidas? Entre em contato
+                </a>
+            </div>
+            <div id="globalStatusMessage" class="status-message" style="display: none;"></div>
+        </header>
+
+        <section class="bg-white p-4 rounded-lg shadow-lg mb-8"> 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+                <div>
+                    <label for="responsavel_familiar" class="form-label text-sm font-medium text-gray-700">Responsável familiar:</label>
+                    <input type="text" id="responsavel_familiar" name="responsavel_familiar">
+                </div>
+                <div>
+                    <label for="esf_responsavel" class="form-label text-sm font-medium text-gray-700">ESF responsável:</label>
+                    <input type="text" id="esf_responsavel" name="esf_responsavel">
+                </div>
+                <div>
+                    <label for="micro_area" class="form-label text-sm font-medium text-gray-700">Micro Área:</label>
+                    <input type="text" id="micro_area" name="micro_area">
+                </div>
+                <div>
+                    <label for="responsavel_classificacao" class="form-label text-sm font-medium text-gray-700">Responsável pela classificação:</label>
+                    <input type="text" id="responsavel_classificacao" name="responsavel_classificacao">
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-700 mb-3 border-t pt-4">Sentinelas de Risco</h2> 
+            <table class="w-full table-auto border-collapse table" id="escalaRiscoTable">
+                <thead>
+                    <tr class="text-left text-gray-700">
+                        <th>Sentinela de Risco</th>
+                        <th>Presente? (Sim/Não) / Valores</th>
+                        <th>Multiplicador</th>
+                        <th>Pontos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Itens da Escala serão inseridos aqui pelo JavaScript -->
+                </tbody>
+                <tfoot>
+                    <tr class="bg-gray-100">
+                        <td colspan="3" class="text-right font-bold text-lg">Escore Total de Risco:</td>
+                        <td id="escore_total" class="font-bold text-lg text-center">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+             <p class="mt-3 text-xs text-gray-500"> 
+                Sobre o Multiplicador: 1 (padrão): Situação típica. 0,5: Leve/parcial. 1,5: Moderadamente agravada. 2: Severamente agravada. (Valores inteiros recomendados para multiplicador)
+            </p>
+        </section>
+        
+        <section class="mb-8 text-center">
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
+                <button id="printReportButton" class="btn btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2" viewBox="0 0 16 16">
+                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    </svg>
+                    Imprimir Relatório Completo
+                </button>
+                <button id="clearAllFormsButton" class="btn btn-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eraser-fill mr-2" viewBox="0 0 16 16">
+                        <path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z"/>
+                    </svg>
+                    Limpar Todos Formulários
+                </button>
+            </div>
+            <div id="printStatus" class="status-message" style="display: none;"></div>
+            <button id="openMentalHealthForm" class="btn btn-primary mt-4">
+                Deseja preencher ficha de SINAIS DE ALERTA EM SAÚDE MENTAL?
+            </button>
+        </section>
+
+        <!-- Modal para Ficha de Saúde Mental -->
+        <div id="mentalHealthModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="closeMentalHealthModalButton">&times;</span>
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">FICHA COMPLEMENTAR - SINAIS DE ALERTA PARA O CUIDADO EM SAÚDE MENTAL</h2>
+                <form id="mentalHealthForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div><label for="mh_nome_completo" class="form-label text-sm font-medium text-gray-700">Nome completo:</label><input type="text" id="mh_nome_completo" name="mh_nome_completo"></div>
+                        <div><label for="mh_data_nascimento" class="form-label text-sm font-medium text-gray-700">Data de Nascimento:</label><input type="text" id="mh_data_nascimento" name="mh_data_nascimento" placeholder="DD/MM/AAAA"></div>
+                        <div><label for="mh_nome_social" class="form-label text-sm font-medium text-gray-700">Nome Social:</label><input type="text" id="mh_nome_social" name="mh_nome_social"></div>
+                        <div><label for="mh_sexo" class="form-label text-sm font-medium text-gray-700">Sexo:</label><select id="mh_sexo" name="mh_sexo"><option value="">Selecione...</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="O">Outro</option></select></div>
+                        <div><label for="mh_microarea_mh" class="form-label text-sm font-medium text-gray-700">Microárea (Saúde Mental):</label><input type="text" id="mh_microarea_mh" name="mh_microarea_mh"></div>
+                    </div>
+                    <hr class="my-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Questões Norteadoras</h3>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><p class="font-medium text-gray-700 mb-2">1. Existe comprometimento funcional, tais como:</p><div class="ml-4"><div class="mb-2"><label for="q1a" class="flex items-center"><input type="checkbox" id="q1a" name="q1a" class="custom-checkbox">a. O usuário deixou de ir à escola?</label></div><div class="mb-2"><label for="q1b" class="flex items-center"><input type="checkbox" id="q1b" name="q1b" class="custom-checkbox">b. O usuário deixou de ir ao trabalho?</label></div><div><label for="q1c" class="flex items-center"><input type="checkbox" id="q1c" name="q1c" class="custom-checkbox">c. O usuário deixou de fazer tarefas domésticas que fazia com naturalidade antes?</label></div></div></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q2_check" class="font-medium text-gray-700 flex items-start"><input type="checkbox" id="q2_check" name="q2_check" class="custom-checkbox mt-1">2. Palavras como "mais nervoso", "está surtado", "enlouqueceu", "sem forças", são relacionadas ao usuário?</label><textarea id="q2_details" name="q2_details" rows="2" placeholder="Se sim, quais?" class="mt-2 w-full"></textarea></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q3" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q3" name="q3" class="custom-checkbox">3. O usuário já tentou se machucar ou se matar?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q4" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q4" name="q4" class="custom-checkbox">4. Existe relato de agressividade do usuário contra outras pessoas?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q5" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q5" name="q5" class="custom-checkbox">5. Há um consumo de substâncias lícitas ou ilícitas que esteja prejudicando a sua rotina?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q6" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q6" name="q6" class="custom-checkbox">6. Há relato de dificuldade escolar?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q7" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q7" name="q7" class="custom-checkbox">7. Houve alguma mudança no comportamento, ou seja, o usuário está se comportando de uma forma diferente do habitual?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q8" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q8" name="q8" class="custom-checkbox">8. O usuário está falando coisas sem sentido, ou está confuso?</label></div>
+                    <hr class="my-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div><label for="mh_registrado_por" class="form-label text-sm font-medium text-gray-700">Registrado por:</label><input type="text" id="mh_registrado_por" name="mh_registrado_por"></div>
+                        <div><label for="mh_data_registro" class="form-label text-sm font-medium text-gray-700">Data do Registro:</label><input type="text" id="mh_data_registro" name="mh_data_registro" placeholder="DD/MM/AAAA"></div>
+                    </div>
+                    
+                    <div class="mt-8 flex flex-wrap justify-end items-center gap-3">
+                         <button type="button" id="printMentalHealthReportButton" class="btn btn-success">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2" viewBox="0 0 16 16"><path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/><path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/></svg>
+                             Imprimir Ficha SM
+                         </button>
+                         <button type="button" id="clearMentalHealthFormButton" class="btn btn-warning">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eraser mr-2" viewBox="0 0 16 16"><path d="M8.086 1.012a.5.5 0 0 1 .633.065l4 4a.5.5 0 0 1 0 .708l-5.5 5.5a.5.5 0 0 1-.708 0L1.512 6.286a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .633-.065zM4.293 2.293 2.146 4.44l1.06 1.06L5.354 3.354zm8.56.56L10.707 5l1.061 1.06L13.914 4zM3.586 5.5 2.5 6.586l4.293 4.293L7.854 9.8l-4.268-4.3z"/></svg>
+                             Limpar Ficha SM
+                         </button>
+                        <button type="button" id="cancelMentalHealthFormButton" class="btn btn-secondary">Fechar</button>
+                    </div>
+                    <div id="mentalHealthPrintStatus" class="status-message mt-2" style="display: none;"></div>
+                    <div id="mentalHealthFormStatus" class="status-message mt-2" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- DOM Elements ---
+        const globalStatusMessageDiv = document.getElementById('globalStatusMessage'); 
+        const escalaRiscoTableBody = document.getElementById('escalaRiscoTable')?.querySelector('tbody');
+        const escoreTotalOutput = document.getElementById('escore_total');
+        const escalaRiscoStatusDiv = document.getElementById('escalaRiscoStatus'); 
+
+        const responsavelFamiliarInput = document.getElementById('responsavel_familiar');
+        const esfResponsavelInput = document.getElementById('esf_responsavel');
+        const microAreaInput = document.getElementById('micro_area'); 
+        const responsavelClassificacaoInput = document.getElementById('responsavel_classificacao');
+
+        const mentalHealthModal = document.getElementById('mentalHealthModal');
+        const openMentalHealthFormButton = document.getElementById('openMentalHealthForm');
+        const closeMentalHealthModalButton = document.getElementById('closeMentalHealthModalButton'); 
+        const cancelMentalHealthFormButton = document.getElementById('cancelMentalHealthFormButton'); 
+        const mentalHealthForm = document.getElementById('mentalHealthForm');
+        const mentalHealthFormStatusDiv = document.getElementById('mentalHealthFormStatus');
+        const printReportButton = document.getElementById('printReportButton'); 
+        const printStatusDiv = document.getElementById('printStatus'); 
+        const clearAllFormsButton = document.getElementById('clearAllFormsButton'); 
+
+        const printMentalHealthReportButton = document.getElementById('printMentalHealthReportButton');
+        const clearMentalHealthFormButton = document.getElementById('clearMentalHealthFormButton');
+        const mentalHealthPrintStatus = document.getElementById('mentalHealthPrintStatus');
+
+        // --- Escala de Risco Items Configuration ---
+        const itensEscala = [
+            { id: "acamado", nome: "Acamado", escoreBase: 3, tipo: "sim_nao" },
+            { id: "deficiencia_fisica", nome: "Deficiência física", escoreBase: 3, tipo: "sim_nao" },
+            { id: "deficiencia_mental", nome: "Deficiência mental", escoreBase: 3, tipo: "sim_nao" },
+            { id: "baixas_condicoes_saneamento", nome: "Baixas condições de saneamento", escoreBase: 3, tipo: "sim_nao" },
+            { id: "desnutricao_grave", nome: "Desnutrição grave", escoreBase: 3, tipo: "sim_nao" },
+            { id: "drogadicao", nome: "Drogadição", escoreBase: 2, tipo: "sim_nao" },
+            { id: "desemprego", nome: "Desemprego", escoreBase: 2, tipo: "sim_nao" },
+            { id: "analfabetismo", nome: "Analfabetismo", escoreBase: 1, tipo: "sim_nao" },
+            { id: "menor_6_meses", nome: "Menor de 6 meses", escoreBase: 1, tipo: "sim_nao" },
+            { id: "maior_70_anos", nome: "Maior 70 anos", escoreBase: 1, tipo: "sim_nao" },
+            { id: "hipertensao", nome: "Hipertensão arterial sistêmica", escoreBase: 1, tipo: "sim_nao" },
+            { id: "diabetes", nome: "Diabetes Mellitus", escoreBase: 1, tipo: "sim_nao" },
+            { id: "densidade_domiciliar", nome: "Relação morador/cômodo", tipo: "densidade", fixedMultiplier: 1 } 
+        ];
+
+        // --- Functions ---
+
+        /**
+         * Populates the risk scale table with items.
+         */
+        function popularTabelaEscala() {
+            if (!escalaRiscoTableBody) {
+                console.error("Elemento tbody da tabela de escala de risco não encontrado.");
+                return;
+            }
+            escalaRiscoTableBody.innerHTML = ''; 
+            itensEscala.forEach(item => {
+                const row = escalaRiscoTableBody.insertRow();
+                row.id = `row_${item.id}`;
+                const cellNome = row.insertCell();
+                cellNome.textContent = item.nome;
+                cellNome.classList.add("font-medium", "text-gray-800", "align-middle");
+                const cellInput = row.insertCell();
+                cellInput.classList.add("align-middle");
+                if (item.tipo === "sim_nao") {
+                    const radioGroupDiv = document.createElement('div');
+                    radioGroupDiv.classList.add('radio-group');
+                    const radioSim = document.createElement('input');
+                    radioSim.type = 'radio'; radioSim.id = `${item.id}_sim`; radioSim.name = `radio_${item.id}`;
+                    radioSim.value = item.escoreBase.toString();
+                    radioSim.classList.add('custom-radio-lg'); 
+                    radioSim.addEventListener('change', atualizarEscoreTotal);
+                    const labelSim = document.createElement('label');
+                    labelSim.htmlFor = `${item.id}_sim`; labelSim.textContent = 'Sim';
+                    labelSim.classList.add('custom-label-lg'); 
+                    const radioNao = document.createElement('input');
+                    radioNao.type = 'radio'; radioNao.id = `${item.id}_nao`; radioNao.name = `radio_${item.id}`;
+                    radioNao.value = '0'; 
+                    radioNao.classList.add('custom-radio-lg'); 
+                    radioNao.addEventListener('change', atualizarEscoreTotal);
+                    const labelNao = document.createElement('label');
+                    labelNao.htmlFor = `${item.id}_nao`; labelNao.textContent = 'Não';
+                    labelNao.classList.add('custom-label-lg'); 
+                    radioGroupDiv.appendChild(radioSim); radioGroupDiv.appendChild(labelSim);
+                    radioGroupDiv.appendChild(radioNao); radioGroupDiv.appendChild(labelNao);
+                    cellInput.appendChild(radioGroupDiv);
+                } else if (item.tipo === "densidade") {
+                    const divFlex = document.createElement('div');
+                    divFlex.classList.add('flex', 'flex-col', 'sm:flex-row', 'gap-1', 'items-center', 'justify-start'); 
+                    const divMoradores = document.createElement('div');
+                    divMoradores.classList.add('flex', 'items-center', 'gap-1');
+                    const labelMoradores = document.createElement('label');
+                    labelMoradores.htmlFor = "num_moradores"; labelMoradores.textContent = "Moradores:";
+                    labelMoradores.classList.add('text-xs', 'whitespace-nowrap'); 
+                    const inputMoradores = document.createElement('input');
+                    inputMoradores.type = "number"; inputMoradores.id = "num_moradores"; inputMoradores.min = "0";
+                    inputMoradores.classList.add('p-1', 'text-sm'); 
+                    inputMoradores.addEventListener('input', atualizarEscoreTotal);
+                    divMoradores.appendChild(labelMoradores); divMoradores.appendChild(inputMoradores);
+                    const divComodos = document.createElement('div');
+                    divComodos.classList.add('flex', 'items-center', 'gap-1');
+                    const labelComodos = document.createElement('label');
+                    labelComodos.htmlFor = "num_comodos"; labelComodos.textContent = "Cômodos:";
+                    labelComodos.classList.add('text-xs', 'whitespace-nowrap');
+                    const inputComodos = document.createElement('input');
+                    inputComodos.type = "number"; inputComodos.id = "num_comodos"; inputComodos.min = "1"; inputComodos.value = "1"; 
+                    inputComodos.classList.add('p-1', 'text-sm'); 
+                    inputComodos.addEventListener('input', atualizarEscoreTotal);
+                    divComodos.appendChild(labelComodos); divComodos.appendChild(inputComodos);
+                    divFlex.appendChild(divMoradores); divFlex.appendChild(divComodos);
+                    cellInput.appendChild(divFlex);
+                }
+                const cellMultiplicador = row.insertCell();
+                cellMultiplicador.classList.add("text-center", "align-middle");
+                if (item.fixedMultiplier !== undefined) {
+                    const spanFixed = document.createElement('span');
+                    spanFixed.textContent = `${item.fixedMultiplier}`; 
+                    spanFixed.classList.add('fixed-multiplier-text');
+                    cellMultiplicador.appendChild(spanFixed);
+                } else {
+                    const inputMultiplicador = document.createElement('input');
+                    inputMultiplicador.type = "number"; inputMultiplicador.id = `${item.id}_multiplicador`;
+                    inputMultiplicador.value = "1"; inputMultiplicador.min = "0"; inputMultiplicador.step = "0.5"; 
+                    inputMultiplicador.classList.add('multiplicador-input');
+                    inputMultiplicador.addEventListener('input', atualizarEscoreTotal);
+                    cellMultiplicador.appendChild(inputMultiplicador);
+                }
+                const cellPontos = row.insertCell();
+                cellPontos.id = `${item.id}_pontos`; cellPontos.textContent = "0.00";
+                cellPontos.classList.add('font-semibold', 'text-center', "align-middle");
+            });
+        }
+
+        /**
+         * Calculates and updates the total risk score.
+         */
+        function atualizarEscoreTotal() {
+            let totalPontos = 0;
+            itensEscala.forEach(item => {
+                let multiplicador = 1; 
+                if (item.fixedMultiplier !== undefined) {
+                    multiplicador = item.fixedMultiplier;
+                } else {
+                    const multiplicadorInput = document.getElementById(`${item.id}_multiplicador`);
+                    multiplicador = parseFloat(multiplicadorInput?.value) || 0; 
+                }
+                let pontosItem = 0;
+                let escoreConsiderado = 0;
+                if (item.tipo === "sim_nao") {
+                    const radioSim = document.getElementById(`${item.id}_sim`);
+                    if (radioSim && radioSim.checked) {
+                        escoreConsiderado = parseFloat(radioSim.value);
+                    }
+                    pontosItem = escoreConsiderado * multiplicador;
+                } else if (item.tipo === "densidade") {
+                    const moradoresInput = document.getElementById('num_moradores');
+                    const comodosInput = document.getElementById('num_comodos');
+                    const moradores = parseInt(moradoresInput?.value) || 0;
+                    const comodos = parseInt(comodosInput?.value) || 1; 
+                    let basePontosDensidade = 0;
+                    if (moradores > 0 && comodos > 0) { 
+                        const relacao = moradores / comodos;
+                        if (relacao > 1) basePontosDensidade = 3;
+                        else if (relacao === 1) basePontosDensidade = 2;
+                    }
+                    pontosItem = basePontosDensidade * multiplicador; 
+                }
+                const pontosOutput = document.getElementById(`${item.id}_pontos`);
+                if (pontosOutput) pontosOutput.textContent = pontosItem.toFixed(2);
+                totalPontos += pontosItem;
+            });
+            if (escoreTotalOutput) escoreTotalOutput.textContent = totalPontos.toFixed(2);
+        }
+
+        /**
+         * Shows a status message to the user.
+         */
+        function showStatusMessage(element, message, type = 'success', isGlobal = false) {
+            if (!element) return;
+            element.textContent = message;
+            element.className = `status-message status-${type}`; 
+            element.style.display = 'block';
+            if (!isGlobal) {
+                setTimeout(() => { element.style.display = 'none'; }, 3000);
+            }
+        }
+
+        /**
+         * Toggles a spinner on a button and disables/enables the button.
+         */
+        function toggleSpinner(button, show) {
+            if (!button) return;
+            const spinner = button.querySelector('.spinner');
+            if (spinner) {
+                spinner.style.display = show ? 'inline-block' : 'none';
+            }
+            button.disabled = show;
+        }
+
+        /**
+         * Sets up modal interaction logic.
+         */
+        function setupModalListeners() {
+            if (openMentalHealthFormButton && mentalHealthModal) {
+                openMentalHealthFormButton.disabled = false; 
+                openMentalHealthFormButton.onclick = () => { 
+                    mentalHealthModal.style.display = "block"; 
+                    if(mentalHealthFormStatusDiv) mentalHealthFormStatusDiv.style.display = 'none';
+                    if(mentalHealthPrintStatus) mentalHealthPrintStatus.style.display = 'none';
+                }
+            }
+            if (closeMentalHealthModalButton && mentalHealthModal) {
+                closeMentalHealthModalButton.onclick = () => { 
+                    mentalHealthModal.style.display = "none"; 
+                }
+            }
+            if (cancelMentalHealthFormButton && mentalHealthModal ) {
+                cancelMentalHealthFormButton.onclick = () => {
+                    mentalHealthModal.style.display = "none";
+                };
+            }
+            window.onclick = function(event) {
+                if (event.target == mentalHealthModal) {
+                    if (mentalHealthModal) mentalHealthModal.style.display = "none";
+                }
+            }
+        }
+        
+        /**
+         * Helper function to add text to jsPDF, manages Y position and auto page breaks.
+         */
+        function addTextToPdf(doc, text, x, currentY, options = {}, usableWidth, pageMargin) {
+            const { fontSize = 10, style = 'normal', align = 'left', color = '#000000' } = options;
+            doc.setFontSize(fontSize);
+            doc.setFont('helvetica', style);
+            doc.setTextColor(color);
+            
+            let textX = x;
+            const textLines = doc.splitTextToSize(text, usableWidth - (x > pageMargin ? (x - pageMargin) : 0) );
+            
+            if (align === 'center') {
+                const textWidth = doc.getStringUnitWidth(textLines[0]) * fontSize / doc.internal.scaleFactor;
+                textX = (doc.internal.pageSize.getWidth() - textWidth) / 2;
+                if (textX < pageMargin) textX = pageMargin;
+            } else if (align === 'right') {
+                const textWidth = doc.getStringUnitWidth(textLines[0]) * fontSize / doc.internal.scaleFactor;
+                textX = doc.internal.pageSize.getWidth() - pageMargin - textWidth;
+                 if (textX < pageMargin) textX = pageMargin;
+            }
+
+            const textBlockHeight = textLines.length * (fontSize * 0.352778 * 1.2); 
+            if (currentY + textBlockHeight > doc.internal.pageSize.getHeight() - pageMargin - 5) { 
+                doc.addPage();
+                currentY = pageMargin + 5; 
+            }
+            
+            doc.text(textLines, textX, currentY);
+            return currentY + textBlockHeight; 
+        }
+
+        /**
+         * Generates and triggers download of the main PDF report (both forms).
+         */
+        function printMainReportHandler() {
+            try {
+                const { jsPDF } = window.jspdf; 
+                if (!jsPDF) {
+                    showStatusMessage(printStatusDiv, 'Biblioteca jsPDF não carregada.', 'error');
+                    console.error("jsPDF library is not loaded.");
+                    return;
+                }
+                const doc = new jsPDF();
+                let yPosition = 15; 
+                const lineSpacing = 6; 
+                const sectionSpacing = 10;
+                const indent = 10;
+                const pageMargin = 10;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const usableWidth = pageWidth - (2 * pageMargin);
+
+                // --- Report Header ---
+                yPosition = addTextToPdf(doc, "Relatório de Avaliação de Risco e Saúde Mental", pageWidth / 2, yPosition, { fontSize: 16, style: 'bold', align: 'center' }, usableWidth, pageMargin);
+                yPosition += lineSpacing / 2;
+                yPosition = addTextToPdf(doc, `Data de Geração: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, yPosition, { fontSize: 8, style: 'italic', align: 'center' }, usableWidth, pageMargin);
+                yPosition += sectionSpacing;
+
+                // --- Escala de Risco Section ---
+                yPosition = addTextToPdf(doc, "Escala de Risco Familiar de Coelho-Savassi", pageMargin, yPosition, { fontSize: 14, style: 'bold' }, usableWidth, pageMargin);
+                yPosition += lineSpacing;
+
+                yPosition = addTextToPdf(doc, `Responsável Familiar: ${responsavelFamiliarInput?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                yPosition = addTextToPdf(doc, `ESF Responsável: ${esfResponsavelInput?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                yPosition = addTextToPdf(doc, `Micro Área: ${microAreaInput?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                yPosition = addTextToPdf(doc, `Responsável pela Classificação: ${responsavelClassificacaoInput?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                yPosition += lineSpacing * 0.5; 
+
+                itensEscala.forEach(item => {
+                    let itemDescription = `${item.nome}: `;
+                    let multiplicadorValor;
+                    const pontosValor = document.getElementById(`${item.id}_pontos`)?.textContent || "0.00";
+                    let presenteTextoPdf = "Não Respondido";
+                    if (item.tipo === "sim_nao") {
+                        const radioSim = document.getElementById(`${item.id}_sim`);
+                        const radioNao = document.getElementById(`${item.id}_nao`);
+                        if (radioSim && radioSim.checked) { presenteTextoPdf = "Sim"; }
+                        else if (radioNao && radioNao.checked) { presenteTextoPdf = "Não"; }
+                        itemDescription += `Presente: ${presenteTextoPdf}`;
+                        multiplicadorValor = item.fixedMultiplier !== undefined ? item.fixedMultiplier : (document.getElementById(`${item.id}_multiplicador`)?.value || "1");
+                    } else if (item.tipo === "densidade") {
+                        const moradores = document.getElementById('num_moradores')?.value || "0";
+                        const comodos = document.getElementById('num_comodos')?.value || "1";
+                        itemDescription += `Moradores: ${moradores}, Cômodos: ${comodos}`;
+                        multiplicadorValor = item.fixedMultiplier; 
+                    }
+                    itemDescription += `, Multiplicador: ${multiplicadorValor}, Pontos: ${pontosValor}`;
+                    yPosition = addTextToPdf(doc, itemDescription, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                });
+                const escoreTotal = escoreTotalOutput?.textContent || "0.00";
+                yPosition = addTextToPdf(doc, `Escore Total de Risco: ${escoreTotal}`, pageMargin, yPosition, { fontSize: 11, style: 'bold' }, usableWidth, pageMargin);
+                yPosition += sectionSpacing;
+
+                // --- Mental Health Section (if filled) ---
+                yPosition = printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin, usableWidth); 
+
+                // --- Footer with page numbers ---
+                const finalPageNum = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= finalPageNum; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150); 
+                    doc.text(`Página ${i} de ${finalPageNum}`, pageWidth - pageMargin - 15, doc.internal.pageSize.getHeight() - 10);
+                }
+                doc.save('relatorio_completo_risco_saudemental.pdf');
+                showStatusMessage(printStatusDiv, 'Relatório PDF Completo gerado com sucesso!', 'success');
+            } catch (error) {
+                console.error("Erro ao gerar PDF principal:", error);
+                showStatusMessage(printStatusDiv, `Erro ao gerar PDF: ${error.message}. Verifique o console.`, 'error');
+            }
+        }
+
+        /**
+         * Generates and triggers download of the Mental Health PDF report.
+         */
+        function printMentalHealthReportHandler() {
+             try {
+                const { jsPDF } = window.jspdf; 
+                if (!jsPDF) {
+                    showStatusMessage(mentalHealthPrintStatus, 'Biblioteca jsPDF não carregada.', 'error');
+                    console.error("jsPDF library is not loaded.");
+                    return;
+                }
+                const doc = new jsPDF();
+                let yPosition = 15; 
+                const lineSpacing = 6; 
+                const sectionSpacing = 10;
+                const indent = 10;
+                const pageMargin = 10;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const usableWidth = pageWidth - (2 * pageMargin);
+
+                yPosition = addTextToPdf(doc, "Ficha Complementar - Sinais de Alerta em Saúde Mental", pageWidth / 2, yPosition, { fontSize: 14, style: 'bold', align: 'center' }, usableWidth, pageMargin);
+                yPosition += lineSpacing / 2;
+                yPosition = addTextToPdf(doc, `Data de Geração: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, yPosition, { fontSize: 8, style: 'italic', align: 'center' }, usableWidth, pageMargin);
+                yPosition += sectionSpacing;
+                
+                const initialYForMhSection = yPosition;
+                yPosition = printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin, usableWidth);
+
+                const mhNomeForCheck = document.getElementById('mh_nome_completo')?.value;
+                const isMhFormEffectivelyStarted = mhNomeForCheck || document.getElementById('mh_data_nascimento')?.value || document.getElementById('mh_microarea_mh')?.value;
+
+                if (!isMhFormEffectivelyStarted) {
+                    doc.deletePage(doc.internal.getNumberOfPages()); 
+                    doc.addPage(); 
+                    yPosition = pageMargin + 5;
+                    yPosition = addTextToPdf(doc, "Ficha de Sinais de Alerta em Saúde Mental", pageWidth / 2, yPosition, { fontSize: 14, style: 'bold', align: 'center' }, usableWidth, pageMargin); 
+                    yPosition += sectionSpacing;
+                    yPosition = addTextToPdf(doc, "Nenhum dado da Ficha de Saúde Mental para imprimir.", pageMargin, yPosition, { fontSize: 10, style: 'italic' }, usableWidth, pageMargin);
+                }
+
+                const finalPageNum = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= finalPageNum; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150); 
+                    doc.text(`Página ${i} de ${finalPageNum}`, pageWidth - pageMargin - 15, doc.internal.pageSize.getHeight() - 10);
+                }
+
+                doc.save('relatorio_saude_mental.pdf');
+                showStatusMessage(mentalHealthPrintStatus, 'Relatório da Ficha de Saúde Mental gerado!', 'success');
+            } catch (error) {
+                console.error("Erro ao gerar PDF da Saúde Mental:", error);
+                showStatusMessage(mentalHealthPrintStatus, `Erro ao gerar PDF (SM): ${error.message}.`, 'error');
+            }
+        }
+        
+        /**
+         * Helper function to print mental health section to a jsPDF document.
+         * Returns the new yPosition.
+         */
+        function printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin, usableWidth) {
+            const mhNome = document.getElementById('mh_nome_completo')?.value;
+            const isMhFormStarted = mhNome || document.getElementById('mh_data_nascimento')?.value || document.getElementById('mh_microarea_mh')?.value;
+
+            let titleNeeded = true;
+            
+            if (isMhFormStarted) {
+                if (titleNeeded) { 
+                    yPosition = addTextToPdf(doc, "Ficha Complementar - Sinais de Alerta em Saúde Mental", pageMargin, yPosition, { fontSize: 14, style: 'bold' }, usableWidth, pageMargin);
+                    yPosition += lineSpacing;
+                }
+                
+                const mhData = [
+                    { label: "Nome Completo", value: document.getElementById('mh_nome_completo')?.value || 'N/P' },
+                    { label: "Data de Nascimento", value: document.getElementById('mh_data_nascimento')?.value || 'N/P' },
+                    { label: "Nome Social", value: document.getElementById('mh_nome_social')?.value || 'N/P' },
+                    { label: "Sexo", value: (() => { const sel = document.getElementById('mh_sexo'); return sel && sel.value ? sel.options[sel.selectedIndex].text : 'N/P'; })() },
+                    { label: "Microárea (Saúde Mental)", value: document.getElementById('mh_microarea_mh')?.value || 'N/P' }
+                ];
+                mhData.forEach(data => {
+                    yPosition = addTextToPdf(doc, `${data.label}: ${data.value}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                });
+                yPosition += lineSpacing * 0.5;
+                
+                yPosition = addTextToPdf(doc, "Questões Norteadoras:", pageMargin + indent, yPosition, { fontSize: 10, style: 'bold' }, usableWidth, pageMargin);
+                const q1a = document.getElementById('q1a')?.checked ? "Sim" : "Não";
+                const q1b = document.getElementById('q1b')?.checked ? "Sim" : "Não";
+                const q1c = document.getElementById('q1c')?.checked ? "Sim" : "Não";
+                yPosition = addTextToPdf(doc, `1. Comprometimento funcional: Escola: ${q1a}, Trabalho: ${q1b}, Tarefas domésticas: ${q1c}`, pageMargin + indent + (indent/2), yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                const q2_check = document.getElementById('q2_check')?.checked ? "Sim" : "Não";
+                const q2_details = document.getElementById('q2_details')?.value || 'N/A';
+                yPosition = addTextToPdf(doc, `2. Palavras como "mais nervoso"...: ${q2_check}${q2_check === "Sim" && q2_details !== 'N/A' && q2_details.trim() !== '' ? `. Detalhes: ${q2_details}` : ''}`, pageMargin + indent + (indent/2), yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                const questions = [
+                    { id: 'q3', text: '3. O usuário já tentou se machucar ou se matar?' }, 
+                    { id: 'q4', text: '4. Existe relato de agressividade do usuário contra outras pessoas?' },
+                    { id: 'q5', text: '5. Há um consumo de substâncias lícitas ou ilícitas que esteja prejudicando a sua rotina?' }, 
+                    { id: 'q6', text: '6. Há relato de dificuldade escolar?' },
+                    { id: 'q7', text: '7. Houve alguma mudança no comportamento, ou seja, o usuário está se comportando de uma forma diferente do habitual?' }, 
+                    { id: 'q8', text: '8. O usuário está falando coisas sem sentido, ou está confuso?' }
+                ];
+                questions.forEach(q => {
+                    const checked = document.getElementById(q.id)?.checked ? "Sim" : "Não";
+                    yPosition = addTextToPdf(doc, `${q.text}: ${checked}`, pageMargin + indent + (indent/2), yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                });
+                yPosition += lineSpacing * 0.5;
+                yPosition = addTextToPdf(doc, `Registrado por (Ficha SM): ${document.getElementById('mh_registrado_por')?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                yPosition = addTextToPdf(doc, `Data do Registro (Ficha SM): ${document.getElementById('mh_data_registro')?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                yPosition += sectionSpacing; 
+            }
+            return yPosition;
+        }
+
+
+        /**
+         * Clears all fields from the main risk scale form and mental health form.
+         */
+        function clearAllFormsHandler() {
+            if(responsavelFamiliarInput) responsavelFamiliarInput.value = '';
+            if(esfResponsavelInput) esfResponsavelInput.value = '';
+            if(microAreaInput) microAreaInput.value = '';
+            if(responsavelClassificacaoInput) responsavelClassificacaoInput.value = '';
+
+            itensEscala.forEach(item => {
+                if (item.tipo === "sim_nao") {
+                    const radioSim = document.getElementById(`${item.id}_sim`);
+                    const radioNao = document.getElementById(`${item.id}_nao`);
+                    if (radioSim) radioSim.checked = false;
+                    if (radioNao) radioNao.checked = false; 
+                }
+                if (item.fixedMultiplier === undefined) { 
+                    const multiplicadorInput = document.getElementById(`${item.id}_multiplicador`);
+                    if (multiplicadorInput) multiplicadorInput.value = "1"; 
+                }
+            });
+            const inputMoradores = document.getElementById('num_moradores');
+            const inputComodos = document.getElementById('num_comodos');
+            if (inputMoradores) inputMoradores.value = '';
+            if (inputComodos) inputComodos.value = '1'; 
+            atualizarEscoreTotal(); 
+
+            clearMentalHealthFormOnlyHandler(false); 
+
+            if (escalaRiscoStatusDiv) { escalaRiscoStatusDiv.style.display = 'none'; escalaRiscoStatusDiv.textContent = '';}
+            if (printStatusDiv) { printStatusDiv.style.display = 'none'; printStatusDiv.textContent = '';}
+            
+            showStatusMessage(globalStatusMessageDiv, 'Todos os formulários foram limpos!', 'success');
+             setTimeout(() => { if(globalStatusMessageDiv) globalStatusMessageDiv.style.display = 'none'; }, 2000);
+            console.log("Todos os formulários foram limpos.");
+        }
+
+        /**
+         * Clears only the Mental Health Form fields.
+         */
+        function clearMentalHealthFormOnlyHandler(showMsg = true) {
+            if (mentalHealthForm) {
+                mentalHealthForm.reset();
+            }
+            if (mentalHealthFormStatusDiv) { 
+                mentalHealthFormStatusDiv.style.display = 'none';
+                mentalHealthFormStatusDiv.textContent = '';
+            }
+            if (mentalHealthPrintStatus) {
+                mentalHealthPrintStatus.style.display = 'none';
+                mentalHealthPrintStatus.textContent = '';
+            }
+            if (showMsg) {
+                const statusTarget = mentalHealthFormStatusDiv || globalStatusMessageDiv;
                 showStatusMessage(statusTarget, 'Ficha de Saúde Mental limpa!', 'success');
                  if(!mentalHealthFormStatusDiv) setTimeout(() => { if(globalStatusMessageDiv) globalStatusMessageDiv.style.display = 'none'; }, 2000);
 
