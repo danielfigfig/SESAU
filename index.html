@@ -17,11 +17,20 @@
             display: none; position: fixed; z-index: 1000;
             left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
         }
         .modal-content {
-            background-color: #ffffff; margin: 5% auto; padding: 24px;
-            border-radius: 8px; width: 90%; max-width: 768px; /* md:max-w-3xl */
+            background-color: #ffffff; margin: auto; padding: 24px;
+            border-radius: 8px; width: 90%; 
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-height: 90vh; /* Limit modal height */
+            overflow-y: auto; /* Allow scrolling within modal */
+        }
+        .modal-content-sm {
+             max-width: 500px; /* Smaller modal for confirmations */
+        }
+        .modal-content-lg {
+            max-width: 768px; /* md:max-w-3xl */
         }
         .close-button {
             color: #aaa; float: right; font-size: 28px;
@@ -31,14 +40,21 @@
             color: black; text-decoration: none;
         }
         .table th, .table td {
-            padding: 6px 8px; 
+            padding: 8px; 
             border: 1px solid #e5e7eb; 
             vertical-align: middle;
-            font-size: 0.8rem; 
+            font-size: 0.875rem; 
         }
         .table th {
             background-color: #f9fafb; 
             font-weight: 600; 
+        }
+        .sentinel-description {
+            display: block;
+            font-size: 0.75rem; /* text-xs */
+            color: #6b7280; /* gray-500 */
+            font-weight: 400;
+            margin-top: 4px;
         }
         input[type="number"], input[type="text"], select, textarea {
             border: 1px solid #d1d5db; 
@@ -52,22 +68,19 @@
             width: 60px !important; 
             padding: 0.4rem;
         }
-        /* Styling for radio button groups */
         .radio-group {
             display: flex;
             gap: 10px; /* Space between radio buttons */
             align-items: center;
         }
-        .radio-group label { /* Default label size */
+        .radio-group label {
             margin-left: 4px; 
             font-size: 0.8rem;
         }
-        .radio-group input[type="radio"] { /* Default radio size */
+        .radio-group input[type="radio"] {
             width: auto; 
             accent-color: #3b82f6; 
         }
-
-        /* Custom larger radio buttons and labels */
         .radio-group input[type="radio"].custom-radio-lg {
             width: 1.15rem; /* Tailwind w-5 approx */
             height: 1.15rem; /* Tailwind h-5 approx */
@@ -76,8 +89,6 @@
             font-size: 0.9rem; /* Tailwind text-sm approx */
             margin-left: 6px; 
         }
-
-
         input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
             outline: 2px solid transparent; outline-offset: 2px;
             border-color: #2563eb; box-shadow: 0 0 0 2px #3b82f6;
@@ -100,24 +111,13 @@
         .btn-success:hover { background-color: #059669; }
         .btn-warning { background-color: #f59e0b; color: white; } /* Amber for clear specific form */
         .btn-warning:hover { background-color: #d97706; }
-
-
         .custom-checkbox { margin-right: 0.5rem; }
-        .spinner { /* Kept for potential future use, but save buttons are removed */
-            width: 1rem; height: 1rem; border-width: 2px;
-            border-style: solid; border-color: currentColor;
-            border-right-color: transparent; border-radius: 50%;
-            display: inline-block; animation: spin 0.75s linear infinite;
-            margin-left: 0.5rem;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
         .status-message {
             padding: 0.5rem 1rem; margin-top: 0.5rem;
             border-radius: 0.375rem; font-size: 0.875rem; text-align: center;
         }
         .status-success { background-color: #d1fae5; color: #065f46; }
         .status-error { background-color: #fee2e2; color: #991b1b; }
-        
         #row_densidade_domiciliar label {
             font-size: 0.75rem; 
         }
@@ -132,16 +132,23 @@
         }
         .form-label {
             display: block; 
-            /* text-sm;  Replaced by Tailwind class */
-            /* font-medium; Replaced by Tailwind class */
-            /* text-gray-700; Replaced by Tailwind class */
             margin-bottom: 0.25rem; /* Equivalent to mb-1 */
         }
         .header-logo {
-            max-width: 200px; /* Ajuste o tamanho máximo conforme necessário */
-            max-height: 70px; /* Ajuste a altura máxima conforme necessário */
-            margin-top: 0.5rem; /* mb-2 */
-            margin-bottom: 0.5rem; /* mb-2 */
+            max-width: 200px;
+            max-height: 70px; 
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem; 
+        }
+        #visitorCounter {
+            position: fixed;
+            bottom: 10px;
+            right: 15px;
+            font-size: 0.75rem; /* text-xs */
+            color: #9ca3af; /* gray-400 */
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -152,17 +159,10 @@
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Escala de Risco Familiar de Coelho-Savassi</h1>
             <!-- Logótipo Adicionado Aqui -->
             <div class="flex justify-center my-3">
-                 <img src="https://placehold.co/300x80/02407e/FFFFFF?text=SESAU+AQUIDAUANA&font=raleway" alt="Logótipo da Instituição" class="header-logo">
-                <!-- 
-                    INSTRUÇÃO IMPORTANTE: 
-                    Substitua o URL acima em "src" pelo URL real do seu logótipo.
-                    Por exemplo: src="URL_DO_SEU_LOGO_AQUI.png" 
-                    A imagem de exemplo é: Logo SESAU - Copia.jpg que você carregou.
-                    Você pode ajustar as classes 'max-w-xs' (largura máxima) e 'h-auto' (altura automática)
-                    ou usar CSS personalizado na classe 'header-logo' para dimensionar o seu logótipo.
-                -->
+                 <img id="logoImage" src="https://placehold.co/300x80/02407e/FFFFFF?text=SESAU+AQUIDAUANA&font=raleway" alt="Logótipo da Instituição" class="header-logo" crossorigin="anonymous">
             </div>
-            <p class="text-gray-600 mt-1">Desenvolvido por: Enf. Daniel F. Marmol - Coord. Saúde Digital (adaptado para web)</p>
+            <p class="text-gray-600 mt-1">Desenvolvido por: Enf. Daniel F. Marmol - Coord. Saúde Digital</p>
+            <p class="text-gray-500 text-sm">danielfimafi@gmail.com</p>
             <div id="globalStatusMessage" class="status-message" style="display: none;"></div>
         </header>
 
@@ -191,9 +191,9 @@
                 <thead>
                     <tr class="text-left text-gray-700">
                         <th>Sentinela de Risco</th>
-                        <th>Presente? (Sim/Não) / Valores</th>
-                        <th>Multiplicador</th>
-                        <th>Pontos</th>
+                        <th class="text-center">Presente? (Sim/Não) / Valores</th>
+                        <th class="text-center">Multiplicador</th>
+                        <th class="text-center">Pontos</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -207,7 +207,7 @@
                 </tfoot>
             </table>
              <p class="mt-3 text-xs text-gray-500"> 
-                Sobre o Multiplicador: 1 (padrão): Situação típica. 0,5: Leve/parcial. 1,5: Moderadamente agravada. 2: Severamente agravada. (Valores inteiros recomendados para multiplicador)
+                 Sobre o Multiplicador: 1 (padrão): Situação típica. 0,5: Leve/parcial. 1,5: Moderadamente agravada. 2: Severamente agravada.
             </p>
         </section>
         
@@ -234,14 +234,14 @@
         </section>
 
         <!-- Modal para Ficha de Saúde Mental -->
-        <div id="mentalHealthModal" class="modal">
-            <div class="modal-content">
+        <div id="mentalHealthModal" class="modal" style="display: none;">
+            <div class="modal-content modal-content-lg">
                 <span class="close-button" id="closeMentalHealthModalButton">&times;</span>
                 <h2 class="text-2xl font-semibold text-gray-700 mb-6">FICHA COMPLEMENTAR - SINAIS DE ALERTA PARA O CUIDADO EM SAÚDE MENTAL</h2>
                 <form id="mentalHealthForm">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div><label for="mh_nome_completo" class="form-label text-sm font-medium text-gray-700">Nome completo:</label><input type="text" id="mh_nome_completo" name="mh_nome_completo"></div>
-                        <div><label for="mh_data_nascimento" class="form-label text-sm font-medium text-gray-700">Data de Nascimento:</label><input type="text" id="mh_data_nascimento" name="mh_data_nascimento" placeholder="DD/MM/AAAA"></div>
+                        <div><label for="mh_data_nascimento" class="form-label text-sm font-medium text-gray-700">Data de Nascimento:</label><input type="text" id="mh_data_nascimento" name="mh_data_nascimento" placeholder="DD/MM/AAAA" maxlength="10"></div>
                         <div><label for="mh_nome_social" class="form-label text-sm font-medium text-gray-700">Nome Social:</label><input type="text" id="mh_nome_social" name="mh_nome_social"></div>
                         <div><label for="mh_sexo" class="form-label text-sm font-medium text-gray-700">Sexo:</label><select id="mh_sexo" name="mh_sexo"><option value="">Selecione...</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="O">Outro</option></select></div>
                         <div><label for="mh_microarea_mh" class="form-label text-sm font-medium text-gray-700">Microárea (Saúde Mental):</label><input type="text" id="mh_microarea_mh" name="mh_microarea_mh"></div>
@@ -259,18 +259,18 @@
                     <hr class="my-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div><label for="mh_registrado_por" class="form-label text-sm font-medium text-gray-700">Registrado por:</label><input type="text" id="mh_registrado_por" name="mh_registrado_por"></div>
-                        <div><label for="mh_data_registro" class="form-label text-sm font-medium text-gray-700">Data do Registro:</label><input type="text" id="mh_data_registro" name="mh_data_registro" placeholder="DD/MM/AAAA"></div>
+                        <div><label for="mh_data_registro" class="form-label text-sm font-medium text-gray-700">Data do Registro:</label><input type="text" id="mh_data_registro" name="mh_data_registro" placeholder="DD/MM/AAAA" maxlength="10"></div>
                     </div>
                     
                     <div class="mt-8 flex flex-wrap justify-end items-center gap-3">
                          <button type="button" id="printMentalHealthReportButton" class="btn btn-success">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2" viewBox="0 0 16 16"><path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/><path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/></svg>
-                            Imprimir Ficha SM
-                        </button>
-                        <button type="button" id="clearMentalHealthFormButton" class="btn btn-warning">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eraser mr-2" viewBox="0 0 16 16"><path d="M8.086 1.012a.5.5 0 0 1 .633.065l4 4a.5.5 0 0 1 0 .708l-5.5 5.5a.5.5 0 0 1-.708 0L1.512 6.286a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .633-.065zM4.293 2.293 2.146 4.44l1.06 1.06L5.354 3.354zm8.56.56L10.707 5l1.061 1.06L13.914 4zM3.586 5.5 2.5 6.586l4.293 4.293L7.854 9.8l-4.268-4.3z"/></svg>
-                            Limpar Ficha SM
-                        </button>
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2" viewBox="0 0 16 16"><path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/><path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/></svg>
+                             Imprimir Ficha SM
+                         </button>
+                         <button type="button" id="clearMentalHealthFormButton" class="btn btn-warning">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eraser mr-2" viewBox="0 0 16 16"><path d="M8.086 1.012a.5.5 0 0 1 .633.065l4 4a.5.5 0 0 1 0 .708l-5.5 5.5a.5.5 0 0 1-.708 0L1.512 6.286a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .633-.065zM4.293 2.293 2.146 4.44l1.06 1.06L5.354 3.354zm8.56.56L10.707 5l1.061 1.06L13.914 4zM3.586 5.5 2.5 6.586l4.293 4.293L7.854 9.8l-4.268-4.3z"/></svg>
+                             Limpar Ficha SM
+                         </button>
                         <button type="button" id="cancelMentalHealthFormButton" class="btn btn-secondary">Fechar</button>
                     </div>
                     <div id="mentalHealthPrintStatus" class="status-message mt-2" style="display: none;"></div>
@@ -278,136 +278,132 @@
                 </form>
             </div>
         </div>
+
+        <!-- Modal para Confirmação de Limpeza -->
+        <div id="confirmClearModal" class="modal">
+            <div class="modal-content modal-content-sm">
+                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Confirmar Ação</h2>
+                 <p class="text-gray-600 mb-6">Tem certeza de que deseja limpar todos os dados dos formulários? Esta ação não pode ser desfeita.</p>
+                 <div class="flex justify-end gap-3">
+                     <button id="cancelClearButton" class="btn btn-secondary">Cancelar</button>
+                     <button id="confirmClearButton" class="btn btn-danger">Sim, Limpar Tudo</button>
+                 </div>
+            </div>
+        </div>
     </div>
+
+    <div id="visitorCounter"></div>
 
     <script type="module">
         // --- DOM Elements ---
-        const globalStatusMessageDiv = document.getElementById('globalStatusMessage'); 
         const escalaRiscoTableBody = document.getElementById('escalaRiscoTable')?.querySelector('tbody');
         const escoreTotalOutput = document.getElementById('escore_total');
-        const escalaRiscoStatusDiv = document.getElementById('escalaRiscoStatus'); 
-
         const responsavelFamiliarInput = document.getElementById('responsavel_familiar');
         const esfResponsavelInput = document.getElementById('esf_responsavel');
         const microAreaInput = document.getElementById('micro_area'); 
         const responsavelClassificacaoInput = document.getElementById('responsavel_classificacao');
+        const globalStatusMessageDiv = document.getElementById('globalStatusMessage'); 
 
+        // Modals
         const mentalHealthModal = document.getElementById('mentalHealthModal');
+        const confirmClearModal = document.getElementById('confirmClearModal');
+
+        // Buttons
         const openMentalHealthFormButton = document.getElementById('openMentalHealthForm');
         const closeMentalHealthModalButton = document.getElementById('closeMentalHealthModalButton'); 
         const cancelMentalHealthFormButton = document.getElementById('cancelMentalHealthFormButton'); 
-        const mentalHealthForm = document.getElementById('mentalHealthForm');
-        const mentalHealthFormStatusDiv = document.getElementById('mentalHealthFormStatus');
-        const printReportButton = document.getElementById('printReportButton'); 
-        const printStatusDiv = document.getElementById('printStatus'); 
         const clearAllFormsButton = document.getElementById('clearAllFormsButton'); 
-
+        const printReportButton = document.getElementById('printReportButton'); 
         const printMentalHealthReportButton = document.getElementById('printMentalHealthReportButton');
         const clearMentalHealthFormButton = document.getElementById('clearMentalHealthFormButton');
+        const cancelClearButton = document.getElementById('cancelClearButton');
+        const confirmClearButton = document.getElementById('confirmClearButton');
+        
+        // Forms & Statuses
+        const mentalHealthForm = document.getElementById('mentalHealthForm');
+        const mentalHealthFormStatusDiv = document.getElementById('mentalHealthFormStatus');
+        const printStatusDiv = document.getElementById('printStatus'); 
         const mentalHealthPrintStatus = document.getElementById('mentalHealthPrintStatus');
+        const visitorCounterDiv = document.getElementById('visitorCounter');
 
         // --- Escala de Risco Items Configuration ---
         const itensEscala = [
-            { id: "acamado", nome: "Acamado", escoreBase: 3, tipo: "sim_nao" },
-            { id: "deficiencia_fisica", nome: "Deficiência física", escoreBase: 3, tipo: "sim_nao" },
-            { id: "deficiencia_mental", nome: "Deficiência mental", escoreBase: 3, tipo: "sim_nao" },
-            { id: "baixas_condicoes_saneamento", nome: "Baixas condições de saneamento", escoreBase: 3, tipo: "sim_nao" },
-            { id: "desnutricao_grave", nome: "Desnutrição grave", escoreBase: 3, tipo: "sim_nao" },
-            { id: "drogadicao", nome: "Drogadição", escoreBase: 2, tipo: "sim_nao" },
-            { id: "desemprego", nome: "Desemprego", escoreBase: 2, tipo: "sim_nao" },
-            { id: "analfabetismo", nome: "Analfabetismo", escoreBase: 1, tipo: "sim_nao" },
-            { id: "menor_6_meses", nome: "Menor de 6 meses", escoreBase: 1, tipo: "sim_nao" },
-            { id: "maior_70_anos", nome: "Maior 70 anos", escoreBase: 1, tipo: "sim_nao" },
-            { id: "hipertensao", nome: "Hipertensão arterial sistêmica", escoreBase: 1, tipo: "sim_nao" },
-            { id: "diabetes", nome: "Diabetes Mellitus", escoreBase: 1, tipo: "sim_nao" },
-            { id: "densidade_domiciliar", nome: "Relação morador/cômodo", tipo: "densidade", fixedMultiplier: 1 } 
+            { id: "acamado", nome: "Acamado", descricao: "Toda pessoa restrita ao domicílio, por falta de habilidade e/ou incapacidade de locomoção por si só a qualquer unidade de saúde.", escoreBase: 3, tipo: "sim_nao" },
+            { id: "deficiencia_fisica", nome: "Deficiência física", descricao: "Qualquer condição que limite a mobilidade ou a capacidade física do indivíduo, exigindo cuidados ou suporte especial.", escoreBase: 3, tipo: "sim_nao" },
+            { id: "deficiencia_mental", nome: "Deficiência mental", descricao: "Qualquer condição que afete o desenvolvimento intelectual ou a saúde mental, necessitando de suporte contínuo.", escoreBase: 3, tipo: "sim_nao" },
+            { id: "baixas_condicoes_saneamento", nome: "Baixas condições de saneamento", descricao: "Domicílio sem acesso à rede de esgoto ou fossa séptica, e/ou sem coleta de lixo regular.", escoreBase: 3, tipo: "sim_nao" },
+            { id: "desnutricao_grave", nome: "Desnutrição grave", descricao: "Indivíduo com diagnóstico clínico ou indicadores antropométricos (peso/altura) de desnutrição grave.", escoreBase: 3, tipo: "sim_nao" },
+            { id: "drogadicao", nome: "Drogadição", descricao: "Uso abusivo de substâncias psicoativas por um ou mais membros, com impacto negativo na dinâmica familiar.", escoreBase: 2, tipo: "sim_nao" },
+            { id: "desemprego", nome: "Desemprego", descricao: "Principal provedor da família ou múltiplos membros adultos sem emprego formal ou fonte de renda estável.", escoreBase: 2, tipo: "sim_nao" },
+            { id: "analfabetismo", nome: "Analfabetismo", descricao: "Membros adultos da família que não sabem ler ou escrever, dificultando o acesso à informação e serviços.", escoreBase: 1, tipo: "sim_nao" },
+            { id: "menor_6_meses", nome: "Menor de 6 meses", descricao: "Presença de criança com menos de 6 meses no domicílio, período de maior vulnerabilidade.", escoreBase: 1, tipo: "sim_nao" },
+            { id: "maior_70_anos", nome: "Maior de 70 anos", descricao: "Presença de idoso com 70 anos ou mais, que pode apresentar maior fragilidade e necessidade de acompanhamento.", escoreBase: 1, tipo: "sim_nao" },
+            { id: "hipertensao", nome: "Hipertensão arterial sistêmica", descricao: "Presença de membro(s) com diagnóstico de HAS, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
+            { id: "diabetes", nome: "Diabetes Mellitus", descricao: "Presença de membro(s) com diagnóstico de DM, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
+            { id: "densidade_domiciliar", nome: "Relação morador/cômodo", descricao: "Relação entre o número de moradores e o de cômodos da casa (excluindo banheiros e áreas de serviço).", tipo: "densidade", fixedMultiplier: 1 } 
         ];
 
         // --- Functions ---
 
         /**
-         * Populates the risk scale table with items.
+         * Populates the risk scale table with items and their descriptions.
          */
         function popularTabelaEscala() {
-            if (!escalaRiscoTableBody) {
-                console.error("Elemento tbody da tabela de escala de risco não encontrado.");
-                return;
-            }
+            if (!escalaRiscoTableBody) return;
             escalaRiscoTableBody.innerHTML = ''; 
             itensEscala.forEach(item => {
                 const row = escalaRiscoTableBody.insertRow();
                 row.id = `row_${item.id}`;
+                
                 const cellNome = row.insertCell();
-                cellNome.textContent = item.nome;
-                cellNome.classList.add("font-medium", "text-gray-800", "align-middle");
+                cellNome.innerHTML = `
+                    <span class="font-medium text-gray-800">${item.nome}</span>
+                    <small class="sentinel-description">${item.descricao}</small>
+                `;
+
                 const cellInput = row.insertCell();
-                cellInput.classList.add("align-middle");
+                cellInput.classList.add("align-middle", "text-center");
                 if (item.tipo === "sim_nao") {
-                    const radioGroupDiv = document.createElement('div');
-                    radioGroupDiv.classList.add('radio-group');
-                    const radioSim = document.createElement('input');
-                    radioSim.type = 'radio'; radioSim.id = `${item.id}_sim`; radioSim.name = `radio_${item.id}`;
-                    radioSim.value = item.escoreBase.toString();
-                    radioSim.classList.add('custom-radio-lg'); 
-                    radioSim.addEventListener('change', atualizarEscoreTotal);
-                    const labelSim = document.createElement('label');
-                    labelSim.htmlFor = `${item.id}_sim`; labelSim.textContent = 'Sim';
-                    labelSim.classList.add('custom-label-lg'); 
-                    const radioNao = document.createElement('input');
-                    radioNao.type = 'radio'; radioNao.id = `${item.id}_nao`; radioNao.name = `radio_${item.id}`;
-                    radioNao.value = '0'; 
-                    radioNao.classList.add('custom-radio-lg'); 
-                    radioNao.addEventListener('change', atualizarEscoreTotal);
-                    const labelNao = document.createElement('label');
-                    labelNao.htmlFor = `${item.id}_nao`; labelNao.textContent = 'Não';
-                    labelNao.classList.add('custom-label-lg'); 
-                    radioGroupDiv.appendChild(radioSim); radioGroupDiv.appendChild(labelSim);
-                    radioGroupDiv.appendChild(radioNao); radioGroupDiv.appendChild(labelNao);
-                    cellInput.appendChild(radioGroupDiv);
+                    cellInput.innerHTML = `
+                        <div class="radio-group justify-center">
+                            <input type="radio" id="${item.id}_sim" name="radio_${item.id}" value="${item.escoreBase}" class="custom-radio-lg">
+                            <label for="${item.id}_sim" class="custom-label-lg">Sim</label>
+                            <input type="radio" id="${item.id}_nao" name="radio_${item.id}" value="0" class="custom-radio-lg" checked>
+                            <label for="${item.id}_nao" class="custom-label-lg">Não</label>
+                        </div>
+                    `;
                 } else if (item.tipo === "densidade") {
-                    const divFlex = document.createElement('div');
-                    divFlex.classList.add('flex', 'flex-col', 'sm:flex-row', 'gap-1', 'items-center', 'justify-start'); 
-                    const divMoradores = document.createElement('div');
-                    divMoradores.classList.add('flex', 'items-center', 'gap-1');
-                    const labelMoradores = document.createElement('label');
-                    labelMoradores.htmlFor = "num_moradores"; labelMoradores.textContent = "Moradores:";
-                    labelMoradores.classList.add('text-xs', 'whitespace-nowrap'); 
-                    const inputMoradores = document.createElement('input');
-                    inputMoradores.type = "number"; inputMoradores.id = "num_moradores"; inputMoradores.min = "0";
-                    inputMoradores.classList.add('p-1', 'text-sm'); 
-                    inputMoradores.addEventListener('input', atualizarEscoreTotal);
-                    divMoradores.appendChild(labelMoradores); divMoradores.appendChild(inputMoradores);
-                    const divComodos = document.createElement('div');
-                    divComodos.classList.add('flex', 'items-center', 'gap-1');
-                    const labelComodos = document.createElement('label');
-                    labelComodos.htmlFor = "num_comodos"; labelComodos.textContent = "Cômodos:";
-                    labelComodos.classList.add('text-xs', 'whitespace-nowrap');
-                    const inputComodos = document.createElement('input');
-                    inputComodos.type = "number"; inputComodos.id = "num_comodos"; inputComodos.min = "1"; inputComodos.value = "1"; 
-                    inputComodos.classList.add('p-1', 'text-sm'); 
-                    inputComodos.addEventListener('input', atualizarEscoreTotal);
-                    divComodos.appendChild(labelComodos); divComodos.appendChild(inputComodos);
-                    divFlex.appendChild(divMoradores); divFlex.appendChild(divComodos);
-                    cellInput.appendChild(divFlex);
+                    cellInput.innerHTML = `
+                        <div class="flex flex-col sm:flex-row gap-2 items-center justify-center">
+                            <div class="flex items-center gap-1">
+                                <label for="num_moradores" class="text-xs whitespace-nowrap">Moradores:</label>
+                                <input type="number" id="num_moradores" min="0" class="p-1 text-sm">
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <label for="num_comodos" class="text-xs whitespace-nowrap">Cômodos:</label>
+                                <input type="number" id="num_comodos" min="1" value="1" class="p-1 text-sm">
+                            </div>
+                        </div>
+                    `;
                 }
+                
                 const cellMultiplicador = row.insertCell();
                 cellMultiplicador.classList.add("text-center", "align-middle");
                 if (item.fixedMultiplier !== undefined) {
-                    const spanFixed = document.createElement('span');
-                    spanFixed.textContent = `${item.fixedMultiplier}`; 
-                    spanFixed.classList.add('fixed-multiplier-text');
-                    cellMultiplicador.appendChild(spanFixed);
+                    cellMultiplicador.innerHTML = `<span class="fixed-multiplier-text">${item.fixedMultiplier}</span>`;
                 } else {
-                    const inputMultiplicador = document.createElement('input');
-                    inputMultiplicador.type = "number"; inputMultiplicador.id = `${item.id}_multiplicador`;
-                    inputMultiplicador.value = "1"; inputMultiplicador.min = "0"; inputMultiplicador.step = "0.5"; 
-                    inputMultiplicador.classList.add('multiplicador-input');
-                    inputMultiplicador.addEventListener('input', atualizarEscoreTotal);
-                    cellMultiplicador.appendChild(inputMultiplicador);
+                    cellMultiplicador.innerHTML = `<input type="number" id="${item.id}_multiplicador" value="1" min="0" step="0.5" class="multiplicador-input mx-auto">`;
                 }
+                
                 const cellPontos = row.insertCell();
-                cellPontos.id = `${item.id}_pontos`; cellPontos.textContent = "0.00";
+                cellPontos.id = `${item.id}_pontos`;
+                cellPontos.textContent = "0.00";
                 cellPontos.classList.add('font-semibold', 'text-center', "align-middle");
+            });
+            // Add event listeners after creating the elements
+            escalaRiscoTableBody.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', atualizarEscoreTotal);
+                input.addEventListener('input', atualizarEscoreTotal);
             });
         }
 
@@ -455,217 +451,205 @@
         /**
          * Shows a status message to the user.
          */
-        function showStatusMessage(element, message, type = 'success', isGlobal = false) {
+        function showStatusMessage(element, message, type = 'success') {
             if (!element) return;
             element.textContent = message;
             element.className = `status-message status-${type}`; 
             element.style.display = 'block';
-            if (!isGlobal) {
-                setTimeout(() => { element.style.display = 'none'; }, 3000);
-            }
-        }
-
-        /**
-         * Toggles a spinner on a button and disables/enables the button.
-         */
-        function toggleSpinner(button, show) {
-            if (!button) return;
-            const spinner = button.querySelector('.spinner');
-            if (spinner) {
-                spinner.style.display = show ? 'inline-block' : 'none';
-            }
-            button.disabled = show;
+            setTimeout(() => { element.style.display = 'none'; }, 3000);
         }
 
         /**
          * Sets up modal interaction logic.
          */
         function setupModalListeners() {
-            if (openMentalHealthFormButton && mentalHealthModal) {
-                openMentalHealthFormButton.disabled = false; 
-                openMentalHealthFormButton.onclick = () => { 
-                    mentalHealthModal.style.display = "block"; 
-                    if(mentalHealthFormStatusDiv) mentalHealthFormStatusDiv.style.display = 'none';
-                    if(mentalHealthPrintStatus) mentalHealthPrintStatus.style.display = 'none';
-                }
-            }
-            if (closeMentalHealthModalButton && mentalHealthModal) {
-                closeMentalHealthModalButton.onclick = () => { 
-                    mentalHealthModal.style.display = "none"; 
-                }
-            }
-            if (cancelMentalHealthFormButton && mentalHealthModal ) {
-                cancelMentalHealthFormButton.onclick = () => {
-                    mentalHealthModal.style.display = "none";
-                };
-            }
-            window.onclick = function(event) {
-                if (event.target == mentalHealthModal) {
-                    if (mentalHealthModal) mentalHealthModal.style.display = "none";
-                }
+            if (openMentalHealthFormButton) openMentalHealthFormButton.onclick = () => { mentalHealthModal.style.display = "flex"; };
+            if (closeMentalHealthModalButton) closeMentalHealthModalButton.onclick = () => { mentalHealthModal.style.display = "none"; };
+            if (cancelMentalHealthFormButton) cancelMentalHealthFormButton.onclick = () => { mentalHealthModal.style.display = "none"; };
+            if (clearAllFormsButton) clearAllFormsButton.onclick = () => { confirmClearModal.style.display = 'flex'; };
+            if (cancelClearButton) cancelClearButton.onclick = () => { confirmClearModal.style.display = 'none'; };
+            if (confirmClearButton) confirmClearButton.onclick = () => {
+                confirmClearModal.style.display = 'none';
+                clearAllFormsHandler();
+            };
+            window.onclick = (event) => {
+                if (event.target == mentalHealthModal) mentalHealthModal.style.display = "none";
+                if (event.target == confirmClearModal) confirmClearModal.style.display = "none";
             }
         }
         
         /**
+         * Converts an image to a Base64 encoded string for PDF embedding.
+         */
+        function getImageBase64(imageElement) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = (err) => reject('Could not load image for PDF');
+                img.src = imageElement.src;
+            });
+        }
+        
+        /**
+         * Adds a header with logo to the PDF.
+         */
+        async function addPdfHeader(doc, logoBase64) {
+            const pageMargin = 10;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let yPosition = 15;
+            if (logoBase64) {
+                try {
+                    const logoWidth = 40; const logoHeight = 15;
+                    const logoX = (pageWidth - logoWidth) / 2;
+                    doc.addImage(logoBase64, 'PNG', logoX, yPosition - 8, logoWidth, logoHeight);
+                    yPosition += logoHeight;
+                } catch (e) { console.error("Failed to add logo to PDF:", e); }
+            }
+            return yPosition;
+        }
+
+        /**
          * Helper function to add text to jsPDF, manages Y position and auto page breaks.
          */
-        function addTextToPdf(doc, text, x, currentY, options = {}, usableWidth, pageMargin) {
-            const { fontSize = 10, style = 'normal', align = 'left', color = '#000000' } = options;
+        function addTextToPdf(doc, text, x, currentY, options = {}) {
+            const { fontSize = 10, style = 'normal', align = 'left', color = '#000000', maxWidth } = options;
+            const pageMargin = 10;
+            const usableWidth = doc.internal.pageSize.getWidth() - (2 * pageMargin);
+            
             doc.setFontSize(fontSize);
             doc.setFont('helvetica', style);
             doc.setTextColor(color);
             
-            let textX = x;
-            const textLines = doc.splitTextToSize(text, usableWidth - (x > pageMargin ? (x - pageMargin) : 0) );
-            
-            if (align === 'center') {
-                const textWidth = doc.getStringUnitWidth(textLines[0]) * fontSize / doc.internal.scaleFactor;
-                textX = (doc.internal.pageSize.getWidth() - textWidth) / 2;
-                if (textX < pageMargin) textX = pageMargin;
-            } else if (align === 'right') {
-                const textWidth = doc.getStringUnitWidth(textLines[0]) * fontSize / doc.internal.scaleFactor;
-                textX = doc.internal.pageSize.getWidth() - pageMargin - textWidth;
-                 if (textX < pageMargin) textX = pageMargin;
-            }
+            const textLines = doc.splitTextToSize(text, maxWidth || usableWidth);
+            const lineHeight = fontSize * 1.15 / doc.internal.scaleFactor;
+            const textBlockHeight = textLines.length * lineHeight;
 
-            const textBlockHeight = textLines.length * (fontSize * 0.352778 * 1.2); 
-            if (currentY + textBlockHeight > doc.internal.pageSize.getHeight() - pageMargin - 5) { 
+            if (currentY + textBlockHeight > doc.internal.pageSize.getHeight() - pageMargin) { 
                 doc.addPage();
-                currentY = pageMargin + 5; 
+                currentY = pageMargin; 
             }
             
-            doc.text(textLines, textX, currentY);
-            return currentY + textBlockHeight; 
+            doc.text(textLines, x, currentY, { align: align === 'left' ? undefined : align });
+            return currentY + textBlockHeight + (lineHeight * 0.2); 
         }
 
         /**
-         * Generates and triggers download of the main PDF report (both forms).
+         * Generates and triggers download of the main PDF report.
          */
-        function printMainReportHandler() {
+        async function printMainReportHandler() {
             try {
                 const { jsPDF } = window.jspdf; 
                 if (!jsPDF) {
                     showStatusMessage(printStatusDiv, 'Biblioteca jsPDF não carregada.', 'error');
-                    console.error("jsPDF library is not loaded.");
                     return;
                 }
+                
+                const logoImg = document.getElementById('logoImage');
+                let logoBase64 = null;
+                if (logoImg) try { logoBase64 = await getImageBase64(logoImg); } catch (e) { showStatusMessage(printStatusDiv, 'Atenção: Não foi possível carregar o logo para o PDF.', 'error'); }
+
                 const doc = new jsPDF();
-                let yPosition = 15; 
-                const lineSpacing = 6; 
+                const lineSpacing = 7; 
                 const sectionSpacing = 10;
-                const indent = 10;
+                const indent = 15;
                 const pageMargin = 10;
                 const pageWidth = doc.internal.pageSize.getWidth();
-                const usableWidth = pageWidth - (2 * pageMargin);
 
-                // --- Report Header ---
-                yPosition = addTextToPdf(doc, "Relatório de Avaliação de Risco e Saúde Mental", pageWidth / 2, yPosition, { fontSize: 16, style: 'bold', align: 'center' }, usableWidth, pageMargin);
+                let yPosition = await addPdfHeader(doc, logoBase64);
+
+                yPosition = addTextToPdf(doc, "Relatório de Avaliação de Risco e Saúde Mental", pageWidth / 2, yPosition, { fontSize: 16, style: 'bold', align: 'center' });
                 yPosition += lineSpacing / 2;
-                yPosition = addTextToPdf(doc, `Data de Geração: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, yPosition, { fontSize: 8, style: 'italic', align: 'center' }, usableWidth, pageMargin);
+                yPosition = addTextToPdf(doc, `Data: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, yPosition, { fontSize: 8, style: 'italic', align: 'center' });
                 yPosition += sectionSpacing;
 
-                // --- Escala de Risco Section ---
-                yPosition = addTextToPdf(doc, "Escala de Risco Familiar de Coelho-Savassi", pageMargin, yPosition, { fontSize: 14, style: 'bold' }, usableWidth, pageMargin);
+                yPosition = addTextToPdf(doc, "Escala de Risco Familiar de Coelho-Savassi", pageMargin, yPosition, { fontSize: 14, style: 'bold' });
                 yPosition += lineSpacing;
 
-                yPosition = addTextToPdf(doc, `Responsável Familiar: ${responsavelFamiliarInput?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
-                yPosition = addTextToPdf(doc, `ESF Responsável: ${esfResponsavelInput?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
-                yPosition = addTextToPdf(doc, `Micro Área: ${microAreaInput?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
-                yPosition = addTextToPdf(doc, `Responsável pela Classificação: ${responsavelClassificacaoInput?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
-                yPosition += lineSpacing * 0.5; 
+                yPosition = addTextToPdf(doc, `Responsável Familiar: ${responsavelFamiliarInput?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
+                yPosition = addTextToPdf(doc, `ESF Responsável: ${esfResponsavelInput?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
+                yPosition = addTextToPdf(doc, `Micro Área: ${microAreaInput?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
+                yPosition = addTextToPdf(doc, `Responsável pela Classificação: ${responsavelClassificacaoInput?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
+                yPosition += lineSpacing; 
 
                 itensEscala.forEach(item => {
-                    let itemDescription = `${item.nome}: `;
-                    let multiplicadorValor;
-                    const pontosValor = document.getElementById(`${item.id}_pontos`)?.textContent || "0.00";
                     let presenteTextoPdf = "Não Respondido";
                     if (item.tipo === "sim_nao") {
                         const radioSim = document.getElementById(`${item.id}_sim`);
-                        const radioNao = document.getElementById(`${item.id}_nao`);
-                        if (radioSim && radioSim.checked) { presenteTextoPdf = "Sim"; }
-                        else if (radioNao && radioNao.checked) { presenteTextoPdf = "Não"; }
-                        itemDescription += `Presente: ${presenteTextoPdf}`;
-                        multiplicadorValor = item.fixedMultiplier !== undefined ? item.fixedMultiplier : (document.getElementById(`${item.id}_multiplicador`)?.value || "1");
-                    } else if (item.tipo === "densidade") {
-                        const moradores = document.getElementById('num_moradores')?.value || "0";
-                        const comodos = document.getElementById('num_comodos')?.value || "1";
-                        itemDescription += `Moradores: ${moradores}, Cômodos: ${comodos}`;
-                        multiplicadorValor = item.fixedMultiplier; 
+                        if (radioSim && radioSim.checked) presenteTextoPdf = "Sim";
+                        else presenteTextoPdf = "Não";
                     }
-                    itemDescription += `, Multiplicador: ${multiplicadorValor}, Pontos: ${pontosValor}`;
-                    yPosition = addTextToPdf(doc, itemDescription, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                    if(presenteTextoPdf === "Sim" || item.tipo === 'densidade'){
+                        yPosition = addTextToPdf(doc, `• ${item.nome}`, indent, yPosition, {fontSize: 10, style: 'bold'});
+                        yPosition = addTextToPdf(doc, item.descricao, indent + 5, yPosition, {fontSize: 8, style: 'italic', color: '#555555'});
+
+                        let details = '';
+                        if (item.tipo === "sim_nao") {
+                            const multiplicador = document.getElementById(`${item.id}_multiplicador`)?.value || "1";
+                            details += `Presente: Sim, Multiplicador: ${multiplicador}`;
+                        } else {
+                            const moradores = document.getElementById('num_moradores')?.value || "0";
+                            const comodos = document.getElementById('num_comodos')?.value || "1";
+                             details += `Moradores: ${moradores}, Cômodos: ${comodos}`;
+                        }
+                        const pontos = document.getElementById(`${item.id}_pontos`)?.textContent || "0.00";
+                        details += `, Pontos: ${pontos}`;
+                        yPosition = addTextToPdf(doc, details, indent + 5, yPosition, {fontSize: 9});
+                        yPosition += 2;
+                    }
                 });
+                yPosition += lineSpacing * 0.5;
                 const escoreTotal = escoreTotalOutput?.textContent || "0.00";
-                yPosition = addTextToPdf(doc, `Escore Total de Risco: ${escoreTotal}`, pageMargin, yPosition, { fontSize: 11, style: 'bold' }, usableWidth, pageMargin);
+                yPosition = addTextToPdf(doc, `Escore Total de Risco: ${escoreTotal}`, pageMargin, yPosition, { fontSize: 12, style: 'bold' });
                 yPosition += sectionSpacing;
 
-                // --- Mental Health Section (if filled) ---
-                yPosition = printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin, usableWidth); 
+                yPosition = printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin); 
 
-                // --- Footer with page numbers ---
                 const finalPageNum = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= finalPageNum; i++) {
                     doc.setPage(i);
-                    doc.setFontSize(8);
-                    doc.setTextColor(150); 
-                    doc.text(`Página ${i} de ${finalPageNum}`, pageWidth - pageMargin - 15, doc.internal.pageSize.getHeight() - 10);
+                    doc.setFontSize(8); doc.setTextColor(150); 
+                    doc.text(`Página ${i} de ${finalPageNum}`, pageWidth - pageMargin, doc.internal.pageSize.getHeight() - 10, {align: 'right'});
                 }
-                doc.save('relatorio_completo_risco_saudemental.pdf');
+                doc.save('relatorio_risco_familia.pdf');
                 showStatusMessage(printStatusDiv, 'Relatório PDF Completo gerado com sucesso!', 'success');
             } catch (error) {
                 console.error("Erro ao gerar PDF principal:", error);
-                showStatusMessage(printStatusDiv, `Erro ao gerar PDF: ${error.message}. Verifique o console.`, 'error');
+                showStatusMessage(printStatusDiv, `Erro ao gerar PDF: ${error.message}.`, 'error');
             }
         }
 
         /**
          * Generates and triggers download of the Mental Health PDF report.
          */
-        function printMentalHealthReportHandler() {
+        async function printMentalHealthReportHandler() {
              try {
                 const { jsPDF } = window.jspdf; 
-                if (!jsPDF) {
-                    showStatusMessage(mentalHealthPrintStatus, 'Biblioteca jsPDF não carregada.', 'error');
-                    console.error("jsPDF library is not loaded.");
-                    return;
-                }
-                const doc = new jsPDF();
-                let yPosition = 15; 
-                const lineSpacing = 6; 
-                const sectionSpacing = 10;
-                const indent = 10;
-                const pageMargin = 10;
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const usableWidth = pageWidth - (2 * pageMargin);
-
-                yPosition = addTextToPdf(doc, "Ficha Complementar - Sinais de Alerta em Saúde Mental", pageWidth / 2, yPosition, { fontSize: 14, style: 'bold', align: 'center' }, usableWidth, pageMargin);
-                yPosition += lineSpacing / 2;
-                yPosition = addTextToPdf(doc, `Data de Geração: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, yPosition, { fontSize: 8, style: 'italic', align: 'center' }, usableWidth, pageMargin);
-                yPosition += sectionSpacing;
+                if (!jsPDF) { showStatusMessage(mentalHealthPrintStatus, 'Biblioteca jsPDF não carregada.', 'error'); return; }
+                const isMhFormEffectivelyStarted = document.getElementById('mh_nome_completo')?.value || document.getElementById('mh_data_nascimento')?.value;
+                if (!isMhFormEffectivelyStarted) { showStatusMessage(mentalHealthPrintStatus, 'Nenhum dado da Ficha de Saúde Mental para imprimir.', 'error'); return; }
                 
-                const initialYForMhSection = yPosition;
-                yPosition = printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin, usableWidth);
+                const logoImg = document.getElementById('logoImage');
+                let logoBase64 = null;
+                if (logoImg) try { logoBase64 = await getImageBase64(logoImg); } catch(e) { /* ignore */ }
 
-                const mhNomeForCheck = document.getElementById('mh_nome_completo')?.value;
-                const isMhFormEffectivelyStarted = mhNomeForCheck || document.getElementById('mh_data_nascimento')?.value || document.getElementById('mh_microarea_mh')?.value;
-
-                if (!isMhFormEffectivelyStarted) {
-                     doc.deletePage(doc.internal.getNumberOfPages()); 
-                     doc.addPage(); 
-                     yPosition = pageMargin + 5;
-                     yPosition = addTextToPdf(doc, "Ficha de Sinais de Alerta em Saúde Mental", pageWidth / 2, yPosition, { fontSize: 14, style: 'bold', align: 'center' }, usableWidth, pageMargin); 
-                     yPosition += sectionSpacing;
-                     yPosition = addTextToPdf(doc, "Nenhum dado da Ficha de Saúde Mental para imprimir.", pageMargin, yPosition, { fontSize: 10, style: 'italic' }, usableWidth, pageMargin);
-                }
+                const doc = new jsPDF();
+                let yPosition = await addPdfHeader(doc, logoBase64);
+                yPosition = printMentalHealthSectionToPdf(doc, yPosition, 7, 10, 15, 10, true);
 
                 const finalPageNum = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= finalPageNum; i++) {
                     doc.setPage(i);
-                    doc.setFontSize(8);
-                    doc.setTextColor(150); 
-                    doc.text(`Página ${i} de ${finalPageNum}`, pageWidth - pageMargin - 15, doc.internal.pageSize.getHeight() - 10);
+                    doc.setFontSize(8); doc.setTextColor(150); 
+                    doc.text(`Página ${i} de ${finalPageNum}`, doc.internal.pageSize.getWidth() - 10, doc.internal.pageSize.getHeight() - 10, {align: 'right'});
                 }
-
                 doc.save('relatorio_saude_mental.pdf');
                 showStatusMessage(mentalHealthPrintStatus, 'Relatório da Ficha de Saúde Mental gerado!', 'success');
             } catch (error) {
@@ -676,55 +660,40 @@
         
         /**
          * Helper function to print mental health section to a jsPDF document.
-         * Returns the new yPosition.
          */
-        function printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin, usableWidth) {
-            const mhNome = document.getElementById('mh_nome_completo')?.value;
-            const isMhFormStarted = mhNome || document.getElementById('mh_data_nascimento')?.value || document.getElementById('mh_microarea_mh')?.value;
-
-            let titleNeeded = true;
-            
+        function printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin, forceTitle = false) {
+            const isMhFormStarted = document.getElementById('mh_nome_completo')?.value || document.getElementById('mh_data_nascimento')?.value;
             if (isMhFormStarted) {
-                if (titleNeeded) { 
-                    yPosition = addTextToPdf(doc, "Ficha Complementar - Sinais de Alerta em Saúde Mental", pageMargin, yPosition, { fontSize: 14, style: 'bold' }, usableWidth, pageMargin);
-                    yPosition += lineSpacing;
-                }
+                if (yPosition + 60 > doc.internal.pageSize.getHeight() - pageMargin) { doc.addPage(); yPosition = pageMargin; }
+
+                yPosition = addTextToPdf(doc, "Ficha de Sinais de Alerta em Saúde Mental", forceTitle ? doc.internal.pageSize.getWidth()/2 : pageMargin, yPosition, { fontSize: 14, style: 'bold', align: forceTitle ? 'center' : 'left' });
+                yPosition += lineSpacing;
                 
                 const mhData = [
-                    { label: "Nome Completo", value: document.getElementById('mh_nome_completo')?.value || 'N/P' },
-                    { label: "Data de Nascimento", value: document.getElementById('mh_data_nascimento')?.value || 'N/P' },
-                    { label: "Nome Social", value: document.getElementById('mh_nome_social')?.value || 'N/P' },
-                    { label: "Sexo", value: (() => { const sel = document.getElementById('mh_sexo'); return sel && sel.value ? sel.options[sel.selectedIndex].text : 'N/P'; })() },
-                    { label: "Microárea (Saúde Mental)", value: document.getElementById('mh_microarea_mh')?.value || 'N/P' }
+                    { label: "Nome", value: document.getElementById('mh_nome_completo')?.value }, { label: "Data Nasc.", value: document.getElementById('mh_data_nascimento')?.value },
+                    { label: "Nome Social", value: document.getElementById('mh_nome_social')?.value }, { label: "Sexo", value: (() => { const sel = document.getElementById('mh_sexo'); return sel?.value ? sel.options[sel.selectedIndex].text : ''; })() },
+                    { label: "Microárea", value: document.getElementById('mh_microarea_mh')?.value }
                 ];
-                mhData.forEach(data => {
-                    yPosition = addTextToPdf(doc, `${data.label}: ${data.value}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
-                });
-                yPosition += lineSpacing * 0.5;
+                yPosition = addTextToPdf(doc, mhData.map(d => `${d.label}: ${d.value || 'N/P'}`).join(' | '), indent, yPosition, {fontSize: 9});
+                yPosition += lineSpacing;
                 
-                yPosition = addTextToPdf(doc, "Questões Norteadoras:", pageMargin + indent, yPosition, { fontSize: 10, style: 'bold' }, usableWidth, pageMargin);
-                const q1a = document.getElementById('q1a')?.checked ? "Sim" : "Não";
-                const q1b = document.getElementById('q1b')?.checked ? "Sim" : "Não";
-                const q1c = document.getElementById('q1c')?.checked ? "Sim" : "Não";
-                yPosition = addTextToPdf(doc, `1. Comprometimento funcional: Escola: ${q1a}, Trabalho: ${q1b}, Tarefas domésticas: ${q1c}`, pageMargin + indent + (indent/2), yPosition, {fontSize: 9}, usableWidth, pageMargin);
-                const q2_check = document.getElementById('q2_check')?.checked ? "Sim" : "Não";
-                const q2_details = document.getElementById('q2_details')?.value || 'N/A';
-                yPosition = addTextToPdf(doc, `2. Palavras como "mais nervoso"...: ${q2_check}${q2_check === "Sim" && q2_details !== 'N/A' && q2_details.trim() !== '' ? `. Detalhes: ${q2_details}` : ''}`, pageMargin + indent + (indent/2), yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                yPosition = addTextToPdf(doc, "Questões Norteadoras:", indent, yPosition, { fontSize: 10, style: 'bold' });
+                const q1a = document.getElementById('q1a')?.checked, q1b = document.getElementById('q1b')?.checked, q1c = document.getElementById('q1c')?.checked;
+                if(q1a || q1b || q1c) yPosition = addTextToPdf(doc, `• Comprometimento funcional: Escola(${q1a?'Sim':'Não'}), Trabalho(${q1b?'Sim':'Não'}), Tarefas(${q1c?'Sim':'Não'})`, indent + 5, yPosition, {fontSize: 9});
+                const q2_check = document.getElementById('q2_check')?.checked;
+                const q2_details = document.getElementById('q2_details')?.value;
+                if(q2_check) yPosition = addTextToPdf(doc, `• Palavras como "mais nervoso"...: Sim${q2_details ? `. Detalhes: ${q2_details}` : ''}`, indent + 5, yPosition, {fontSize: 9});
+                
                 const questions = [
-                    { id: 'q3', text: '3. O usuário já tentou se machucar ou se matar?' }, 
-                    { id: 'q4', text: '4. Existe relato de agressividade do usuário contra outras pessoas?' },
-                    { id: 'q5', text: '5. Há um consumo de substâncias lícitas ou ilícitas que esteja prejudicando a sua rotina?' }, 
-                    { id: 'q6', text: '6. Há relato de dificuldade escolar?' },
-                    { id: 'q7', text: '7. Houve alguma mudança no comportamento, ou seja, o usuário está se comportando de uma forma diferente do habitual?' }, 
-                    { id: 'q8', text: '8. O usuário está falando coisas sem sentido, ou está confuso?' }
+                    { id: 'q3', text: 'Tentou se machucar ou se matar?' }, { id: 'q4', text: 'Relato de agressividade?' },
+                    { id: 'q5', text: 'Consumo de substâncias prejudicando rotina?' }, { id: 'q6', text: 'Dificuldade escolar?' },
+                    { id: 'q7', text: 'Mudança de comportamento?' }, { id: 'q8', text: 'Falando coisas sem sentido / confuso?' }
                 ];
                 questions.forEach(q => {
-                    const checked = document.getElementById(q.id)?.checked ? "Sim" : "Não";
-                    yPosition = addTextToPdf(doc, `${q.text}: ${checked}`, pageMargin + indent + (indent/2), yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                    if(document.getElementById(q.id)?.checked) yPosition = addTextToPdf(doc, `• ${q.text}: Sim`, indent + 5, yPosition, {fontSize: 9});
                 });
-                yPosition += lineSpacing * 0.5;
-                yPosition = addTextToPdf(doc, `Registrado por (Ficha SM): ${document.getElementById('mh_registrado_por')?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
-                yPosition = addTextToPdf(doc, `Data do Registro (Ficha SM): ${document.getElementById('mh_data_registro')?.value || 'N/P'}`, pageMargin + indent, yPosition, {fontSize: 9}, usableWidth, pageMargin);
+                yPosition += lineSpacing;
+                yPosition = addTextToPdf(doc, `Registrado por: ${document.getElementById('mh_registrado_por')?.value || 'N/P'} | Data: ${document.getElementById('mh_data_registro')?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
                 yPosition += sectionSpacing; 
             }
             return yPosition;
@@ -732,83 +701,62 @@
 
 
         /**
-         * Clears all fields from the main risk scale form and mental health form.
+         * Clears all fields from all forms.
          */
         function clearAllFormsHandler() {
-            if(responsavelFamiliarInput) responsavelFamiliarInput.value = '';
-            if(esfResponsavelInput) esfResponsavelInput.value = '';
-            if(microAreaInput) microAreaInput.value = '';
-            if(responsavelClassificacaoInput) responsavelClassificacaoInput.value = '';
-
-            itensEscala.forEach(item => {
-                if (item.tipo === "sim_nao") {
-                    const radioSim = document.getElementById(`${item.id}_sim`);
-                    const radioNao = document.getElementById(`${item.id}_nao`);
-                    if (radioSim) radioSim.checked = false;
-                    if (radioNao) radioNao.checked = false; 
-                }
-                if (item.fixedMultiplier === undefined) { 
-                     const multiplicadorInput = document.getElementById(`${item.id}_multiplicador`);
-                     if (multiplicadorInput) multiplicadorInput.value = "1"; 
-                }
-            });
-            const inputMoradores = document.getElementById('num_moradores');
-            const inputComodos = document.getElementById('num_comodos');
-            if (inputMoradores) inputMoradores.value = '';
-            if (inputComodos) inputComodos.value = '1'; 
+            document.getElementById('responsavel_familiar').value = '';
+            document.getElementById('esf_responsavel').value = '';
+            document.getElementById('micro_area').value = '';
+            document.getElementById('responsavel_classificacao').value = '';
+            popularTabelaEscala(); // Re-populates and resets table to default state
             atualizarEscoreTotal(); 
-
             clearMentalHealthFormOnlyHandler(false); 
-
-            if (escalaRiscoStatusDiv) { escalaRiscoStatusDiv.style.display = 'none'; escalaRiscoStatusDiv.textContent = '';}
-            if (printStatusDiv) { printStatusDiv.style.display = 'none'; printStatusDiv.textContent = '';}
-            
+            if (printStatusDiv) printStatusDiv.style.display = 'none';
             showStatusMessage(globalStatusMessageDiv, 'Todos os formulários foram limpos!', 'success');
-             setTimeout(() => { if(globalStatusMessageDiv) globalStatusMessageDiv.style.display = 'none'; }, 2000);
-            console.log("Todos os formulários foram limpos.");
         }
 
         /**
          * Clears only the Mental Health Form fields.
          */
         function clearMentalHealthFormOnlyHandler(showMsg = true) {
-            if (mentalHealthForm) {
-                mentalHealthForm.reset();
-            }
-            if (mentalHealthFormStatusDiv) { 
-                mentalHealthFormStatusDiv.style.display = 'none';
-                mentalHealthFormStatusDiv.textContent = '';
-            }
-            if (mentalHealthPrintStatus) {
-                mentalHealthPrintStatus.style.display = 'none';
-                mentalHealthPrintStatus.textContent = '';
-            }
-            if (showMsg) {
-                const statusTarget = mentalHealthFormStatusDiv || globalStatusMessageDiv;
-                showStatusMessage(statusTarget, 'Ficha de Saúde Mental limpa!', 'success');
-                 if(!mentalHealthFormStatusDiv) setTimeout(() => { if(globalStatusMessageDiv) globalStatusMessageDiv.style.display = 'none'; }, 2000);
-
-            }
-            console.log("Formulário de Saúde Mental limpo.");
+            if (mentalHealthForm) mentalHealthForm.reset();
+            if (mentalHealthFormStatusDiv) mentalHealthFormStatusDiv.style.display = 'none';
+            if (mentalHealthPrintStatus) mentalHealthPrintStatus.style.display = 'none';
+            if (showMsg) showStatusMessage(mentalHealthFormStatusDiv || globalStatusMessageDiv, 'Ficha de Saúde Mental limpa!', 'success');
         }
-
-
-        // --- Event Listeners Setup ---
         
-        if (printReportButton) printReportButton.addEventListener('click', printMainReportHandler); 
-        if (clearAllFormsButton) clearAllFormsButton.addEventListener('click', clearAllFormsHandler); 
-
-        if (printMentalHealthReportButton) printMentalHealthReportButton.addEventListener('click', printMentalHealthReportHandler);
-        if (clearMentalHealthFormButton) clearMentalHealthFormButton.addEventListener('click', () => clearMentalHealthFormOnlyHandler(true));
+        /**
+         * Formats date inputs with slashes as the user types.
+         */
+        function formatDateInput(e) {
+            let input = e.target;
+            input.value = input.value.replace(/\D/g, '')
+                                     .replace(/(\d{2})(\d)/, '$1/$2')
+                                     .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3')
+                                     .replace(/(\d{2}\/\d{2}\/\d{4}).*/, '$1');
+        }
         
-        setupModalListeners(); 
-        
+        /**
+         * Updates the visitor counter on the page.
+         */
+        function updateVisitorCounter() {
+            let count = localStorage.getItem('visitorCount');
+            count = count ? parseInt(count, 10) + 1 : 1;
+            localStorage.setItem('visitorCount', count);
+            if(visitorCounterDiv) visitorCounterDiv.textContent = `${count}`;
+        }
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM completamente carregado e analisado.");
             popularTabelaEscala(); 
             atualizarEscoreTotal(); 
+            setupModalListeners();
+            updateVisitorCounter();
+            
+            document.getElementById('mh_data_nascimento')?.addEventListener('input', formatDateInput);
+            document.getElementById('mh_data_registro')?.addEventListener('input', formatDateInput);
+            
+            if (confirmClearModal) confirmClearModal.style.display = 'none';
         });
 
     </script>
