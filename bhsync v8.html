@@ -142,8 +142,8 @@
 <script type="module">
     // Firebase SDK Imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', function() {
         // App elements
@@ -156,11 +156,10 @@
         
         // Firebase variables
         let db, auth, userId;
-        let saveTimeout; // For debouncing save operations
+        let saveTimeout;
 
         // --- Generate Static HTML ---
         const generateBedHTML = () => {
-             // ... (HTML generation logic remains the same)
             const createClearBtn = (col) => `<button class="clear-col-button" data-col="${col}" title="Limpar Coluna ${col.toUpperCase()}">X</button>`;
             return `
             <div class="bg-white w-full overflow-x-auto">
@@ -189,11 +188,9 @@
                     </thead>
                     <tbody class="dataRowsBody">
                         ${[19, 20, 21, 22, 23, 24, 1, 2, 3, 4, 5, 6, 7].map(hour => {
-                            const isNight = [19, 20, 21, 22, 23].includes(hour);
-                            const isMorning = [24, 1, 2, 3, 4, 5, 6, 7].includes(hour);
-                            const timeCellClass = isNight ? 'bg-red-custom' : 'bg-blue-custom';
+                            const timeCellClass = [19, 20, 21, 22, 23].includes(hour) ? 'bg-red-custom' : 'bg-blue-custom';
                             const lastRowClass = hour === 7 ? 'border-b-black-strong' : '';
-                            const bInputClass = isMorning ? 'bg-green-custom-input' : '';
+                            const bInputClass = ![19, 20, 21, 22, 23].includes(hour) ? 'bg-green-custom-input' : '';
                             const repeatIcon = `<span class="repeat-down-icon" title="Repetir valor para baixo">⬇</span>`;
                             return `
                                 <tr class="data-row ${lastRowClass}">
@@ -285,10 +282,8 @@
             }
         }
 
-        // --- Firebase Initialization and Auth ---
         async function initializeFirebase() {
             try {
-                // AQUI ESTÁ A CORREÇÃO: Colocamos sua configuração diretamente.
                 const firebaseConfig = {
                     apiKey: "AIzaSyBRY_EgyfDjnGK5-iDsQI01ClQobayPc-k",
                     authDomain: "strabalho-9a69a.firebaseapp.com",
@@ -302,18 +297,16 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
 
-                onAuthStateChanged(auth, async (user) => {
+                onAuthStateChanged(auth, user => {
                     if (user) {
                         userId = user.uid;
                         userIdDisplay.textContent = `ID de Usuário: ${userId}`;
                         statusIndicator.textContent = 'Conectado';
                         statusIndicator.className = 'saved';
-                        // Once authenticated, load data for all beds
                         loadAllBedsData();
                     }
                 });
                 
-                // O código tentará logar anonimamente, já que não há token.
                 await signInAnonymously(auth);
 
             } catch (error) {
@@ -323,8 +316,7 @@
             }
         }
         
-        // --- Data Handling ---
-        let isUpdatingFromFirestore = false; // Flag to prevent feedback loops
+        let isUpdatingFromFirestore = false;
 
         function getBedDataFromPane(pane) {
             const data = {};
@@ -337,18 +329,14 @@
 
         function setPaneDataFromSnapshot(pane, data) {
             isUpdatingFromFirestore = true;
-            if (!data) { // If no data in Firestore, clear the pane
-                pane.querySelectorAll('input[type="number"]').forEach(input => {
-                     if (!input.readOnly) input.value = '';
-                });
-            } else {
-                 pane.querySelectorAll('input[type="number"]').forEach(input => {
-                    const id = input.classList.value.match(/(col-\w+|sumManha|sumTarde)/)[0];
-                    if (data[id] !== undefined && !input.readOnly) {
-                        input.value = data[id];
+            pane.querySelectorAll('input[type="number"]').forEach(input => {
+                if (!input.readOnly) {
+                    const id = input.classList.value.match(/(col-\w+|sumManha|sumTarde)/)?.[0];
+                    if (id) {
+                       input.value = data?.[id] || '';
                     }
-                });
-            }
+                }
+            });
             calculateAllTotals(pane);
             isUpdatingFromFirestore = false;
         }
@@ -364,7 +352,7 @@
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(async () => {
                 try {
-                    const appId = 'bhsync-app'; // CORREÇÃO 2: Usando um nome fixo.
+                    const appId = 'bhsync-app';
                     const docRef = doc(db, 'artifacts', appId, 'users', userId, 'beds', `leito-${bedIndex + 1}`);
                     await setDoc(docRef, data);
                     statusIndicator.textContent = 'Salvo na nuvem';
@@ -374,33 +362,30 @@
                     statusIndicator.textContent = 'Erro ao salvar';
                     statusIndicator.style.backgroundColor = '#dc3545';
                 }
-            }, 1500); // Debounce for 1.5 seconds
+            }, 1500);
         }
 
         function loadAllBedsData() {
             if (!userId) return;
-            const appId = 'bhsync-app'; // CORREÇÃO 2: Usando um nome fixo.
+            const appId = 'bhsync-app';
             
             for (let i = 0; i < numberOfBeds; i++) {
                 const pane = bedsContent.querySelector(`.bed-pane[data-bed-index="${i}"]`);
                 const docRef = doc(db, 'artifacts', appId, 'users', userId, 'beds', `leito-${i + 1}`);
                 
                 onSnapshot(docRef, (doc) => {
-                    console.log(`Data received for bed ${i + 1}`);
+                    console.log(`Dados recebidos para o leito ${i + 1}`);
                     setPaneDataFromSnapshot(pane, doc.data());
                 });
             }
         }
         
-        // --- Calculations (Same as before, but grouped) ---
         function calculateAllTotals(pane) {
-             // ... Calculation logic remains the same
             const colsToSum = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r'];
             const NOITE_CALC_HORARIOS = ['19', '20', '21', '22', '23', '24', '1', '2', '3', '4', '5', '6', '7'];
             const NOITE_CALC_COLUNAS_GANHOS = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
             const NOITE_CALC_COLUNAS_PERDAS = ['m', 'n', 'o', 'p', 'q', 'r'];
 
-            // Calculate Column Totals
             colsToSum.forEach(col => {
                 const sum = Array.from(pane.querySelectorAll(`tbody .col-${col}`))
                                 .reduce((acc, input) => acc + (parseFloat(input.value) || 0), 0);
@@ -408,7 +393,6 @@
                 if (totalCell) totalCell.textContent = sum.toFixed(0);
             });
             
-            // Calculate Noite
             const sumNoiteInput = pane.querySelector('.sumNoite');
             let totalGanhosNoite = 0;
             let totalPerdasNoite = 0;
@@ -416,18 +400,15 @@
                 const hourStr = row.querySelector('.col-time').textContent.trim();
                 if (NOITE_CALC_HORARIOS.includes(hourStr)) {
                     NOITE_CALC_COLUNAS_GANHOS.forEach(col => {
-                        const input = row.querySelector(`.col-${col}`);
-                        if (input) totalGanhosNoite += parseFloat(input.value) || 0;
+                        totalGanhosNoite += parseFloat(row.querySelector(`.col-${col}`)?.value) || 0;
                     });
                     NOITE_CALC_COLUNAS_PERDAS.forEach(col => {
-                        const input = row.querySelector(`.col-${col}`);
-                        if (input) totalPerdasNoite += parseFloat(input.value) || 0;
+                        totalPerdasNoite += parseFloat(row.querySelector(`.col-${col}`)?.value) || 0;
                     });
                 }
             });
             if(sumNoiteInput) sumNoiteInput.value = (totalGanhosNoite - totalPerdasNoite).toFixed(0);
 
-            // Calculate Balanço 24h
             const manha = parseFloat(pane.querySelector('.sumManha').value) || 0;
             const tarde = parseFloat(pane.querySelector('.sumTarde').value) || 0;
             const noite = parseFloat(sumNoiteInput.value) || 0;
@@ -438,22 +419,17 @@
             balancoDisplay.classList.toggle('text-red-dark', balanco < 0);
         }
 
-        // --- Event Listeners ---
         appContainer.addEventListener('input', function(event) {
             if (isUpdatingFromFirestore) return;
-            const target = event.target;
-            const pane = target.closest('.bed-pane');
-            if (!pane) return;
-            
-            const bedIndex = parseInt(pane.dataset.bedIndex, 10);
-            calculateAllTotals(pane);
-            saveBedData(bedIndex);
+            const pane = event.target.closest('.bed-pane');
+            if (pane) {
+                calculateAllTotals(pane);
+                saveBedData(parseInt(pane.dataset.bedIndex, 10));
+            }
         });
 
-        // Event listeners for clicks and keyboard (same as v5)
         const navigateVertical = (activeInput) => {
             const currentPane = activeInput.closest('.bed-pane');
-            if (!currentPane) return;
             const currentCell = activeInput.closest('td');
             const currentRow = currentCell.closest('tr');
             const allRows = Array.from(currentPane.querySelectorAll('.dataRowsBody .data-row'));
@@ -483,10 +459,27 @@
             const bedIndex = parseInt(pane.dataset.bedIndex, 10);
             let shouldSave = false;
             
+            // LÓGICA DO BOTÃO REPETIR CORRIGIDA
             if (target.matches('.repeat-down-icon')) {
-                // ... logic
+                const currentInput = target.previousElementSibling;
+                const currentValue = currentInput.value;
+                if (currentValue) {
+                    const currentRow = target.closest('tr');
+                    const allRows = Array.from(pane.querySelectorAll('.dataRowsBody .data-row'));
+                    const rowIndex = allRows.indexOf(currentRow);
+                    const colClass = currentInput.classList.value.match(/col-\w+/)[0];
+
+                    for (let i = rowIndex + 1; i < allRows.length; i++) {
+                        const nextInput = allRows[i].querySelector(`.${colClass}`);
+                        if (nextInput) {
+                            nextInput.value = currentValue;
+                        }
+                    }
+                }
+                calculateAllTotals(pane);
                 shouldSave = true;
             }
+
             if (target.matches('.clear-col-button')) {
                 const colToClear = target.dataset.col;
                 pane.querySelectorAll(`.data-input.col-${colToClear}`).forEach(input => input.value = '');
@@ -505,25 +498,19 @@
 
             if (target.matches('.visual-enter-button')) {
                 const activeInput = document.activeElement;
-                const allTableInputs = Array.from(pane.querySelectorAll('.data-input:not([readonly])'));
-                if (allTableInputs.includes(activeInput)) {
+                if(activeInput.matches('.data-input')){
                     navigateVertical(activeInput);
-                } else if (allTableInputs.length > 0) {
-                    allTableInputs[0].focus();
                 }
             }
         });
 
         appContainer.addEventListener('keydown', function(event) {
-            const target = event.target;
-            if (!target.matches('input[type="number"]')) return;
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && event.target.matches('input[type="number"]')) {
                 event.preventDefault();
-                navigateVertical(target);
+                navigateVertical(event.target);
             }
         });
 
-        // --- Start Application ---
         initializeFirebase();
     });
 </script>
