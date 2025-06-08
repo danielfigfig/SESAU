@@ -506,24 +506,21 @@
         // --- Keyboard Shortcuts ---
         appContainer.addEventListener('keydown', function(event) {
             const target = event.target;
-            // Garantir que o evento é de um input numérico dentro de um leito
             if (!target.matches('.bed-pane input[type="number"]')) return;
 
             const pane = target.closest('.bed-pane');
             if (!pane) return;
 
-            // Tecla Enter para navegação vertical
             if (event.key === 'Enter') {
                 event.preventDefault();
                 navigateVertical(target);
             }
 
-            // Tecla Seta para Baixo para repetir o valor na coluna
             if (event.key === 'ArrowDown') {
                 event.preventDefault();
                 const currentValue = target.value;
                 
-                if (currentValue) { // Só executa se houver um valor
+                if (currentValue) {
                     const currentRow = target.closest('tr');
                     const allRows = Array.from(pane.querySelectorAll('.dataRowsBody .data-row'));
                     const rowIndex = allRows.indexOf(currentRow);
@@ -531,7 +528,6 @@
                     
                     if (colClassMatch) {
                         const colClass = colClassMatch[0];
-                        // Começa da próxima linha
                         for (let i = rowIndex + 1; i < allRows.length; i++) {
                             const nextInput = allRows[i].querySelector(`.${colClass}`);
                             if (nextInput) {
@@ -545,17 +541,24 @@
                 }
             }
 
-            // Tecla Seta para Cima para limpar a coluna inteira
+            // ATALHO APRIMORADO: Limpa da célula atual para CIMA
             if (event.key === 'ArrowUp') {
                 event.preventDefault();
                 const colClassMatch = target.classList.value.match(/col-\w+/);
 
                 if (colClassMatch) {
                     const colClass = colClassMatch[0];
-                    // Encontra todos os inputs na mesma coluna e os limpa
-                    pane.querySelectorAll(`.data-input.${colClass}`).forEach(input => {
-                        input.value = '';
-                    });
+                    const currentRow = target.closest('tr');
+                    const allRows = Array.from(pane.querySelectorAll('.dataRowsBody .data-row'));
+                    const rowIndex = allRows.indexOf(currentRow);
+
+                    // Itera da linha atual para cima (até o índice 0)
+                    for (let i = rowIndex; i >= 0; i--) {
+                        const inputToClear = allRows[i].querySelector(`.data-input.${colClass}`);
+                        if (inputToClear) {
+                            inputToClear.value = '';
+                        }
+                    }
 
                     calculateAllTotals(pane);
                     saveBedData(parseInt(pane.dataset.bedIndex, 10));
