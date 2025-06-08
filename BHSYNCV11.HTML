@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle com Sincronização na Nuvem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* --- Tab Styles --- */
+        .tabs-container {
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ccc;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            background-color: #e9e9e9;
+            margin-right: 4px;
+            border-radius: 6px 6px 0 0;
+            font-weight: bold;
+            color: #555;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .tab-button.active {
+            background-color: #0070c0;
+            color: white;
+            border-color: #0070c0;
+        }
+        .bed-pane, .control-pane { display: none; }
+        .bed-pane.active, .control-pane.active { display: block; }
+
+        /* --- Table Styles --- */
+        .table-custom {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 1400px;
+            margin: auto;
+        }
+        .table-custom th, .table-custom td {
+            border: 1px solid #000;
+            padding: 0;
+            text-align: center;
+            font-size: 12px;
+            min-width: 60px;
+            height: 30px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .table-custom th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            white-space: nowrap;
+            padding: 5px 6px;
+        }
+        .input-icon-wrapper {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            background-color: white;
+        }
+        .table-custom input[type="number"] {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 12px;
+            padding: 4px 2px;
+            box-sizing: border-box;
+            -moz-appearance: textfield;
+            background-color: transparent;
+        }
+        .table-custom input[type="number"]::-webkit-outer-spin-button,
+        .table-custom input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+        .repeat-down-icon {
+            cursor: pointer; padding: 0 6px; font-size: 16px; color: #333;
+            border-left: 1px solid #ccc; height: 100%; display: flex;
+            align-items: center; background-color: #f9f9f9;
+        }
+        .repeat-down-icon:hover { background-color: #e0e0e0; }
+
+        /* --- Column & Color Styles --- */
+        .col-time { font-weight: bold; color: white; width: 45px; min-width: 45px; }
+        .col-j { border-left: 2px solid black !important; border-right: 2px solid black !important; }
+        .bg-red-custom { background-color: #ff0000; }
+        .bg-blue-custom { background-color: #0070c0; }
+        .bg-green-custom-input { background-color: #c6efce; color: #006100; }
+        .border-r-red-strong { border-right: 2px solid red; }
+        .border-b-black-strong { border-bottom: 2px solid black; }
+
+        /* --- Header & Footer Styles --- */
+        .clear-col-button {
+            position: absolute; bottom: 1px; right: 1px; cursor: pointer;
+            background-color: #e57373; color: white; border: none;
+            border-radius: 50%; width: 16px; height: 16px;
+            font-size: 10px; line-height: 16px; text-align: center;
+            font-weight: bold; transition: background-color 0.2s;
+        }
+        .clear-col-button:hover { background-color: #c00000; }
+        .total-cell-clear { cursor: pointer; color: #c00000; font-weight: bold; }
+        .total-cell-clear:hover { color: #ff0000; }
+        
+        /* --- Summary Inputs Highlight --- */
+        .summary-input input[type="number"] {
+            font-size: 18px !important;
+            font-weight: bold;
+            border: 2px solid #0070c0 !important;
+            background-color: #f0f8ff !important;
+            text-align: center;
+            padding: 8px !important;
+            border-radius: 6px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+         .summary-input input[readonly] {
+            background-color: #e9ecef !important;
+            border-color: #ced4da !important;
+            color: #495057;
+        }
+        
+        /* --- Completion Checkbox --- */
+        .completion-status-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 8px;
+            font-size: 14px;
+        }
+        .completion-status-wrapper label {
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        .completion-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        /* --- Control Panel Styles --- */
+        #control-panel-status {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .status-item {
+            font-size: 1.2rem;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .status-item.completed {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-item.incomplete {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        #clear-all-beds-btn {
+            background-color: #dc3545;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #clear-all-beds-btn:hover {
+            background-color: #c82333;
+        }
+        
+        /* --- Confirmation Modal --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 400px;
+        }
+        .modal-content p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+        #confirm-clear-btn { background-color: #dc3545; color: white; }
+        #cancel-clear-btn { background-color: #6c757d; color: white; }
+
+        /* --- Firebase Status Indicator --- */
+        #firebase-status {
+            position: fixed; top: 10px; right: 10px;
+            background-color: #6c757d; color: white;
+            padding: 5px 15px; border-radius: 15px;
+            font-size: 12px; font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        #firebase-status.saving { background-color: #ffc107; color: black; }
+        #firebase-status.saved { background-color: #28a745; }
+        #user-id-display {
+            font-size: 10px; color: #666; padding: 5px;
+            text-align: center; background: #f0f0f0;
+            border-radius: 4px; margin-top: 10px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-4">
+
+    <div id="firebase-status">Conectando...</div>
+
+    <div id="appContainer" class="bg-white shadow-lg p-4 rounded-lg w-full">
+        <div class="tabs-container overflow-x-auto whitespace-nowrap"></div>
+        <div class="beds-content"></div>
+        <div id="user-id-display">Aguardando autenticação...</div>
+    </div>
+    
+    <!-- Confirmation Modal HTML -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <p>Tem certeza que deseja apagar TODOS os dados de TODOS os 10 leitos? Esta ação não pode ser desfeita.</p>
+            <button id="confirm-clear-btn">Sim, Apagar Tudo</button>
+            <button id="cancel-clear-btn">Cancelar</button>
+        </div>
+    </div>
+
+
+<script type="module">
+    // Firebase SDK Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // App elements
+        const appContainer = document.getElementById('appContainer');
+        const tabsContainer = appContainer.querySelector('.tabs-container');
+        const bedsContent = appContainer.querySelector('.beds-content');
+        const statusIndicator = document.getElementById('firebase-status');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmClearBtn = document.getElementById('confirm-clear-btn');
+        const cancelClearBtn = document.getElementById('cancel-clear-btn');
+        const numberOfBeds = 10;
+        
+        // Firebase and App variables
+        let db, auth, userId;
+        let saveTimeout;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-bhsync-app';
+        let isUpdatingFromFirestore = false;
+
+        // --- Generate Static HTML for a single bed pane ---
+        const generateBedHTML = () => {
+            const createClearBtn = (col) => `<button class="clear-col-button" data-col="${col}" title="Limpar Coluna ${col.toUpperCase()}">X</button>`;
+            return `
+            <div class="bg-white w-full overflow-x-auto">
+                <table class="table-custom">
+                    <thead>
+                        <!-- Table headers remain the same -->
+                        <tr>
+                            <th>A</th><th class="border-r-red-strong">B<br>INS ${createClearBtn('b')}</th><th class="border-r-red-strong">C<br>VO ${createClearBtn('c')}</th><th class="border-r-red-strong">D<br>PLA ${createClearBtn('d')}</th><th class="border-r-red-strong">E<br>MED ${createClearBtn('e')}</th><th class="border-r-red-strong">F<br>NOR ${createClearBtn('f')}</th><th class="border-r-red-strong">G<br>DOR ${createClearBtn('g')}</th><th class="border-r-red-strong">H<br>FEN ${createClearBtn('h')}</th><th class="border-r-red-strong">I<br>BIC ${createClearBtn('i')}</th><th class="col-j border-r-red-strong">J<br>BIC ${createClearBtn('j')}</th><th class="col-k-header border-r-red-strong">K<br>HEM ${createClearBtn('k')}</th><th>L</th><th class="col-m-header border-r-red-strong">M<br>VO<br>SNG ${createClearBtn('m')}</th><th class="border-r-red-strong">N<br>DIUR ${createClearBtn('n')}</th><th class="border-r-red-strong">O<br>EVA<br>C ${createClearBtn('o')}</th><th class="border-r-red-strong">P<br>HD ${createClearBtn('p')}</th><th class="border-r-red-strong">Q<br>DRE<br>1 ${createClearBtn('q')}</th><th>R<br>DRE<br>2 ${createClearBtn('r')}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="dataRowsBody">
+                        ${[19, 20, 21, 22, 23, 24, 1, 2, 3, 4, 5, 6, 7].map(hour => {
+                            const timeCellClass = [19, 20, 21, 22, 23].includes(hour) ? 'bg-red-custom' : 'bg-blue-custom';
+                            const lastRowClass = hour === 7 ? 'border-b-black-strong' : '';
+                            const bInputClass = ![19, 20, 21, 22, 23].includes(hour) ? 'bg-green-custom-input' : '';
+                            const repeatIcon = `<span class="repeat-down-icon" title="Repetir valor para baixo (Ctrl + Seta para Baixo)">⬇</span>`;
+                            return `
+                                <tr class="data-row ${lastRowClass}">
+                                    <td class="col-time ${timeCellClass}">${hour}</td>
+                                    <td class="border-r-red-strong"><div class="input-icon-wrapper ${bInputClass}"><input type="number" class="data-input col-b">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-c">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-d">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-e">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-f">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-g">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-h">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-i">${repeatIcon}</div></td><td class="col-j border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-j">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-k">${repeatIcon}</div></td><td class="col-time bg-gray-300 text-black">${hour}</td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-m">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-n">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-o">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-p">${repeatIcon}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-q">${repeatIcon}</div></td><td><div class="input-icon-wrapper"><input type="number" class="data-input col-r">${repeatIcon}</div></td>
+                                </tr>`;
+                        }).join('')}
+                    </tbody>
+                    <tfoot>
+                        <!-- Totals row remains the same -->
+                        <tr class="border-b-black-strong total-cell">
+                             <td class="total-cell-clear" title="Limpar todos os valores deste leito">LIMPAR LEITO</td><td class="total-cell-value total-b border-r-red-strong">0</td><td class="total-cell-value total-c border-r-red-strong">0</td><td class="total-cell-value total-d border-r-red-strong">0</td><td class="total-cell-value total-e border-r-red-strong">0</td><td class="total-cell-value total-f border-r-red-strong">0</td><td class="total-cell-value total-g border-r-red-strong">0</td><td class="total-cell-value total-h border-r-red-strong">0</td><td class="total-cell-value total-i border-r-red-strong">0</td><td class="total-cell-value total-j border-r-red-strong">0</td><td class="total-cell-value total-k border-r-red-strong">0</td><td></td><td class="total-cell-value total-m border-r-red-strong">0</td><td class="total-cell-value total-n border-r-red-strong">0</td><td class="total-cell-value total-o border-r-red-strong">0</td><td class="total-cell-value total-p border-r-red-strong">0</td><td class="total-cell-value total-q border-r-red-strong">0</td><td class="total-cell-value total-r">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="mt-6 p-3 bg-gray-50 rounded-md">
+                     <table class="w-full">
+                        <!-- Summary table remains the same -->
+                        <tbody><tr><td class="summary-label text-center">Manhã</td><td class="summary-label text-center">TARDE</td><td class="summary-label text-center">NOITE</td><td class="summary-label text-center" style="width: 20%; vertical-align: middle;"><button class="visual-enter-button" title="Mover para célula abaixo na tabela (Enter)">ENTER ↵</button></td><td class="summary-label text-center" colspan="2">Balanço 24h</td></tr><tr><td class="summary-input"><input type="number" class="sumManha data-input"></td><td class="summary-input"><input type="number" class="sumTarde data-input"></td><td class="summary-input"><input type="number" class="sumNoite data-input" readonly></td><td style="width: 20%;"></td><td class="summary-value text-blue-dark text-center balanco24h" colspan="2" style="font-size: 20px; font-weight: bold;">0</td></tr></tbody>
+                    </table>
+                     <!-- NEW: Completion Checkbox -->
+                     <div class="completion-status-wrapper">
+                        <label for="completion-checkbox">Preenchimento Concluído:</label>
+                        <input type="checkbox" class="completion-checkbox">
+                     </div>
+                </div>
+            </div>`;
+        };
+        
+        // --- Setup UI: Bed Panes and Control Panel ---
+        function setupUI() {
+            // Create Bed tabs and panes
+            for (let i = 0; i < numberOfBeds; i++) {
+                const tab = document.createElement('button');
+                tab.className = 'tab-button';
+                tab.textContent = `Leito ${i + 1}`;
+                tab.dataset.bedIndex = i;
+                tabsContainer.appendChild(tab);
+
+                const pane = document.createElement('div');
+                pane.className = 'bed-pane';
+                pane.dataset.bedIndex = i;
+                pane.innerHTML = generateBedHTML();
+                bedsContent.appendChild(pane);
+            }
+            
+            // Create Control tab and pane
+            const controlTab = document.createElement('button');
+            controlTab.className = 'tab-button';
+            controlTab.textContent = 'Controle';
+            controlTab.dataset.bedIndex = 'control';
+            tabsContainer.appendChild(controlTab);
+
+            const controlPane = document.createElement('div');
+            controlPane.className = 'control-pane p-4';
+            controlPane.dataset.bedIndex = 'control';
+            controlPane.innerHTML = `
+                <h2 class="text-xl font-bold mb-4">Painel de Controle Geral</h2>
+                <button id="clear-all-beds-btn">Limpar Todos os Leitos</button>
+                <ul id="control-panel-status" class="mt-4"></ul>
+            `;
+            bedsContent.appendChild(controlPane);
+            
+            // Set first tab as active
+            tabsContainer.querySelector('.tab-button').classList.add('active');
+            bedsContent.querySelector('.bed-pane').classList.add('active');
+        }
+        setupUI();
+        
+        // Add listener to new button inside the control pane
+        document.getElementById('clear-all-beds-btn').addEventListener('click', () => {
+             confirmModal.style.display = 'flex';
+        });
+        
+        // --- Firebase Initialization and Auth ---
+        async function initializeFirebase() {
+            try {
+                if (typeof __firebase_config ===
