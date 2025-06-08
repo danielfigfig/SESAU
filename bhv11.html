@@ -12,82 +12,30 @@
         }
 
         /* --- Tab Styles --- */
-        .tabs-container {
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #ccc;
-        }
+        .tabs-container { margin-bottom: 1rem; border-bottom: 2px solid #ccc; }
         .tab-button {
-            padding: 10px 15px;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-bottom: none;
-            background-color: #e9e9e9;
-            margin-right: 4px;
-            border-radius: 6px 6px 0 0;
-            font-weight: bold;
-            color: #555;
-            transition: background-color 0.3s, color 0.3s;
+            padding: 10px 15px; cursor: pointer; border: 1px solid #ccc; border-bottom: none;
+            background-color: #e9e9e9; margin-right: 4px; border-radius: 6px 6px 0 0;
+            font-weight: bold; color: #555; transition: background-color 0.3s, color 0.3s;
         }
-        .tab-button.active {
-            background-color: #0070c0;
-            color: white;
-            border-color: #0070c0;
-        }
+        .tab-button.active { background-color: #0070c0; color: white; border-color: #0070c0; }
         .bed-pane, .control-pane { display: none; }
         .bed-pane.active, .control-pane.active { display: block; }
 
         /* --- Table Styles --- */
-        .table-custom {
-            border-collapse: collapse;
-            width: 100%;
-            max-width: 1400px;
-            margin: auto;
-        }
+        .table-custom { border-collapse: collapse; width: 100%; max-width: 1400px; margin: auto; }
         .table-custom th, .table-custom td {
-            border: 1px solid #000;
-            padding: 0;
-            text-align: center;
-            font-size: 12px;
-            min-width: 60px;
-            height: 30px;
-            box-sizing: border-box;
-            position: relative;
+            border: 1px solid #000; padding: 0; text-align: center; font-size: 12px;
+            min-width: 65px; height: 30px; box-sizing: border-box; position: relative;
         }
-        .table-custom th {
-            background-color: #f0f0f0;
-            font-weight: bold;
-            white-space: nowrap;
-            padding: 5px 6px;
-        }
-        .input-icon-wrapper {
-            display: flex;
-            align-items: center;
-            height: 100%;
-            width: 100%;
-            background-color: white;
-        }
+        .table-custom th { background-color: #f0f0f0; font-weight: bold; white-space: nowrap; padding: 5px 6px; }
+        .input-icon-wrapper { display: flex; align-items: center; height: 100%; width: 100%; background-color: white; }
         .table-custom input[type="number"] {
-            flex-grow: 1;
-            width: 100%;
-            height: 100%;
-            border: none;
-            text-align: center;
-            font-size: 12px;
-            padding: 4px 2px;
-            box-sizing: border-box;
-            -moz-appearance: textfield;
-            background-color: transparent;
+            flex-grow: 1; width: 100%; height: 100%; border: none; text-align: center; font-size: 12px;
+            padding: 4px 2px; box-sizing: border-box; -moz-appearance: textfield; background-color: transparent;
         }
         .table-custom input[type="number"]::-webkit-outer-spin-button,
-        .table-custom input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none; margin: 0;
-        }
-        .repeat-down-icon {
-            cursor: pointer; padding: 0 6px; font-size: 16px; color: #333;
-            border-left: 1px solid #ccc; height: 100%; display: flex;
-            align-items: center; background-color: #f9f9f9;
-        }
-        .repeat-down-icon:hover { background-color: #e0e0e0; }
+        .table-custom input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
         /* --- Column & Color Styles --- */
         .col-time { font-weight: bold; color: white; width: 45px; min-width: 45px; }
@@ -98,156 +46,69 @@
         .border-r-red-strong { border-right: 2px solid red; }
         .border-b-black-strong { border-bottom: 2px solid black; }
 
-        /* --- Header & Footer Styles --- */
-        .clear-col-button {
-            position: absolute; bottom: 1px; right: 1px; cursor: pointer;
-            background-color: #e57373; color: white; border: none;
-            border-radius: 50%; width: 16px; height: 16px;
-            font-size: 10px; line-height: 16px; text-align: center;
-            font-weight: bold; transition: background-color 0.2s;
+        /* --- Footer Styles --- */
+        .total-cell-actions { display: flex; justify-content: space-between; align-items: center; padding: 0 2px; height: 100%; }
+        .footer-button {
+            cursor: pointer; color: white; border: none; border-radius: 4px;
+            width: 18px; height: 18px; font-size: 14px; line-height: 18px;
+            text-align: center; font-weight: bold; transition: background-color 0.2s;
         }
+        .clear-col-button { background-color: #e57373; }
         .clear-col-button:hover { background-color: #c00000; }
+        .repeat-col-button { background-color: #64b5f6; }
+        .repeat-col-button:hover { background-color: #2196f3; }
+        .total-cell-value { flex-grow: 1; text-align: center; font-weight: bold; }
         .total-cell-clear { cursor: pointer; color: #c00000; font-weight: bold; }
         .total-cell-clear:hover { color: #ff0000; }
         
         /* --- Summary Inputs Highlight --- */
         .summary-input input[type="number"] {
-            font-size: 18px !important;
-            font-weight: bold;
-            border: 2px solid #0070c0 !important;
-            background-color: #f0f8ff !important;
-            text-align: center;
-            padding: 8px !important;
-            border-radius: 6px;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 18px !important; font-weight: bold; border: 2px solid #0070c0 !important;
+            background-color: #f0f8ff !important; text-align: center; padding: 8px !important;
+            border-radius: 6px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
-         .summary-input input[readonly] {
-            background-color: #e9ecef !important;
-            border-color: #ced4da !important;
-            color: #495057;
-        }
+        .summary-input input[readonly] { background-color: #e9ecef !important; border-color: #ced4da !important; color: #495057; }
         
         /* --- Footer Controls --- */
-        .footer-controls {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            padding: 8px;
-            gap: 20px;
-        }
-        .completion-status-wrapper {
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-        }
-        .completion-status-wrapper label {
-            margin-right: 8px;
-            font-weight: bold;
-        }
-        .completion-checkbox {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
+        .footer-controls { display: flex; justify-content: flex-end; align-items: center; padding: 8px; gap: 20px; }
+        .completion-status-wrapper { display: flex; align-items: center; font-size: 14px; }
+        .completion-status-wrapper label { margin-right: 8px; font-weight: bold; }
+        .completion-checkbox { width: 20px; height: 20px; cursor: pointer; }
         .save-button {
-            background-color: #0070c0;
-            color: white;
-            font-weight: bold;
-            padding: 8px 16px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
+            background-color: #0070c0; color: white; font-weight: bold; padding: 8px 16px;
+            border-radius: 5px; border: none; cursor: pointer; transition: background-color 0.3s;
         }
-        .save-button:hover {
-             background-color: #005a9a;
-        }
+        .save-button:hover { background-color: #005a9a; }
         
         /* --- Control Panel Styles --- */
-        #control-panel-status {
-            list-style: none;
-            padding: 0;
-            margin-top: 20px;
-        }
+        #control-panel-status { list-style: none; padding: 0; margin-top: 20px; }
         .status-item {
-            font-size: 1.1rem;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 8px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-size: 1.1rem; padding: 10px 15px; border-radius: 5px; margin-bottom: 8px; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
         }
         .status-item .balance {
-            font-weight: normal;
-            font-size: 1rem;
-            color: #333;
-            background-color: rgba(255, 255, 255, 0.5);
-            padding: 2px 8px;
-            border-radius: 10px;
+            font-weight: normal; font-size: 1rem; color: #333; background-color: rgba(255, 255, 255, 0.5);
+            padding: 2px 8px; border-radius: 10px;
         }
-        .status-item.completed {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .status-item.incomplete {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
+        .status-item.completed { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-item.incomplete { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         #clear-all-beds-btn {
-            background-color: #dc3545;
-            color: white;
-            font-weight: bold;
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
+            background-color: #dc3545; color: white; font-weight: bold; padding: 10px 20px;
+            border-radius: 5px; border: none; cursor: pointer; transition: background-color 0.3s;
         }
-        #clear-all-beds-btn:hover {
-            background-color: #c82333;
-        }
+        #clear-all-beds-btn:hover { background-color: #c82333; }
         
-        /* --- Confirmation Modal --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            display: none; justify-content: center; align-items: center;
-            z-index: 2000;
-        }
-        .modal-content {
-            background: white; padding: 30px; border-radius: 8px; text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-width: 400px;
-        }
+        /* --- Confirmation Modal & Firebase Status --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-width: 400px; }
         .modal-content p { font-size: 16px; margin-bottom: 20px; }
-        .modal-content button {
-            padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;
-            font-weight: bold; margin: 0 10px;
-        }
+        .modal-content button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 0 10px; }
         #confirm-clear-btn { background-color: #dc3545; color: white; }
         #cancel-clear-btn { background-color: #6c757d; color: white; }
-
-        /* --- Firebase Status Indicator --- */
-        #firebase-status {
-            position: fixed; top: 10px; right: 10px;
-            background-color: #6c757d; color: white;
-            padding: 5px 15px; border-radius: 15px;
-            font-size: 12px; font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 1000;
-        }
+        #firebase-status { position: fixed; top: 10px; right: 10px; background-color: #6c757d; color: white; padding: 5px 15px; border-radius: 15px; font-size: 12px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 1000; }
         #firebase-status.saving { background-color: #ffc107; color: black; }
         #firebase-status.saved { background-color: #28a745; }
-        #user-id-display {
-            font-size: 10px; color: #666; padding: 5px;
-            text-align: center; background: #f0f0f0;
-            border-radius: 4px; margin-top: 10px;
-            word-break: break-all;
-        }
+        #user-id-display { font-size: 10px; color: #666; padding: 5px; text-align: center; background: #f0f0f0; border-radius: 4px; margin-top: 10px; word-break: break-all; }
     </style>
 </head>
 <body class="p-2 sm:p-4">
@@ -290,147 +151,114 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-bhsync-app';
         let isUpdatingFromFirestore = false;
         let unsubscribers = [];
+        let lastFocusedInput = null; // Variable to track the last focused input
 
         // --- Generate Static HTML ---
         const generateBedHTML = () => {
-            const createClearBtn = (col) => `<button class="clear-col-button" data-col="${col}" title="Limpar Coluna ${col.toUpperCase()}">X</button>`;
             const hours = [19, 20, 21, 22, 23, 24, 1, 2, 3, 4, 5, 6];
+            const cols = [
+                { id: 'b', label: 'INS' }, { id: 'c', label: 'VO' }, { id: 'd', label: 'PLA' }, { id: 'e', label: 'MED' }, { id: 'f', label: 'NOR' }, { id: 'g', label: 'DOR' },
+                { id: 'h', label: 'FEN' }, { id: 'i', label: 'BIC' }, { id: 'j', label: 'BIC' }, { id: 'k', label: 'HEM' }, { id: 'm', label: 'VO SNG' }, { id: 'n', label: 'DIUR' },
+                { id: 'o', label: 'EVA C' }, { id: 'p', label: 'HD' }, { id: 'q', label: 'DRE 1' }, { id: 'r', label: 'DRE 2' }
+            ];
+            
+            const headerCells = cols.map(c => `<th class="${c.id === 'j' ? 'col-j' : ''} border-r-red-strong">${c.label.replace(' ', '<br>')}</th>`).join('');
+
+            const bodyRows = hours.map(hour => {
+                const timeCellClass = [19, 20, 21, 22, 23].includes(hour) ? 'bg-red-custom' : 'bg-blue-custom';
+                const lastRowClass = hour === 6 ? 'border-b-black-strong' : '';
+                const bInputClass = ![19, 20, 21, 22, 23].includes(hour) ? 'bg-green-custom-input' : '';
+                const bodyCells = cols.map(c => `<td class="${c.id === 'j' ? 'col-j' : ''} border-r-red-strong"><div class="input-icon-wrapper ${c.id === 'b' ? bInputClass : ''}"><input type="number" class="data-input col-${c.id}"></div></td>`).join('');
+                const rowContent = bodyCells.split('</td>').slice(0, 10).join('</td>') + '</td>';
+                const rowContent2 = bodyCells.split('</td>').slice(10).join('</td>') + '</td>';
+                return `<tr class="data-row ${lastRowClass}"><td class="col-time ${timeCellClass}">${hour}</td>${rowContent}<td class="col-time bg-gray-300 text-black">${hour}</td>${rowContent2}</tr>`;
+            }).join('');
+            
+            const footerCells = cols.map(c => `<td class="border-r-red-strong"><div class="total-cell-actions"><button class="footer-button repeat-col-button" data-col="${c.id}" title="Repetir Valor">⟱</button><span class="total-cell-value total-${c.id}">0</span><button class="footer-button clear-col-button" data-col="${c.id}" title="Limpar Coluna">X</button></div></td>`).join('');
+            const finalFooter = footerCells.split('</td>').slice(0,10).join('</td>') + '</td><td></td>' + footerCells.split('</td>').slice(10).join('</td>') + '</td>';
+
             return `
             <div class="bg-white w-full overflow-x-auto">
                 <table class="table-custom">
-                    <thead><tr><th>A</th><th class="border-r-red-strong">B<br>INS ${createClearBtn('b')}</th><th class="border-r-red-strong">C<br>VO ${createClearBtn('c')}</th><th class="border-r-red-strong">D<br>PLA ${createClearBtn('d')}</th><th class="border-r-red-strong">E<br>MED ${createClearBtn('e')}</th><th class="border-r-red-strong">F<br>NOR ${createClearBtn('f')}</th><th class="border-r-red-strong">G<br>DOR ${createClearBtn('g')}</th><th class="border-r-red-strong">H<br>FEN ${createClearBtn('h')}</th><th class="border-r-red-strong">I<br>BIC ${createClearBtn('i')}</th><th class="col-j border-r-red-strong">J<br>BIC ${createClearBtn('j')}</th><th class="col-k-header border-r-red-strong">K<br>HEM ${createClearBtn('k')}</th><th>L</th><th class="col-m-header border-r-red-strong">M<br>VO<br>SNG ${createClearBtn('m')}</th><th class="border-r-red-strong">N<br>DIUR ${createClearBtn('n')}</th><th class="border-r-red-strong">O<br>EVA<br>C ${createClearBtn('o')}</th><th class="border-r-red-strong">P<br>HD ${createClearBtn('p')}</th><th class="border-r-red-strong">Q<br>DRE<br>1 ${createClearBtn('q')}</th><th>R<br>DRE<br>2 ${createClearBtn('r')}</th></tr></thead>
-                    <tbody class="dataRowsBody">${hours.map(hour => { const t = [19, 20, 21, 22, 23].includes(hour) ? 'bg-red-custom' : 'bg-blue-custom', e = 6 === hour ? 'border-b-black-strong' : '', n = ![19, 20, 21, 22, 23].includes(hour) ? 'bg-green-custom-input' : '', o = '<span class="repeat-down-icon" title="Repetir valor para baixo (Ctrl + Seta para Baixo)">⬇</span>'; return `<tr class="data-row ${e}"><td class="col-time ${t}">${hour}</td><td class="border-r-red-strong"><div class="input-icon-wrapper ${n}"><input type="number" class="data-input col-b">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-c">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-d">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-e">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-f">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-g">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-h">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-i">${o}</div></td><td class="col-j border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-j">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-k">${o}</div></td><td class="col-time bg-gray-300 text-black">${hour}</td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-m">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-n">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-o">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-p">${o}</div></td><td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input col-q">${o}</div></td><td><div class="input-icon-wrapper"><input type="number" class="data-input col-r">${o}</div></td></tr>` }).join('')}</tbody>
-                    <tfoot><tr class="border-b-black-strong total-cell"><td class="total-cell-clear" title="Limpar todos os valores deste leito">LIMPAR LEITO</td><td class="total-cell-value total-b border-r-red-strong">0</td><td class="total-cell-value total-c border-r-red-strong">0</td><td class="total-cell-value total-d border-r-red-strong">0</td><td class="total-cell-value total-e border-r-red-strong">0</td><td class="total-cell-value total-f border-r-red-strong">0</td><td class="total-cell-value total-g border-r-red-strong">0</td><td class="total-cell-value total-h border-r-red-strong">0</td><td class="total-cell-value total-i border-r-red-strong">0</td><td class="total-cell-value total-j border-r-red-strong">0</td><td class="total-cell-value total-k border-r-red-strong">0</td><td></td><td class="total-cell-value total-m border-r-red-strong">0</td><td class="total-cell-value total-n border-r-red-strong">0</td><td class="total-cell-value total-o border-r-red-strong">0</td><td class="total-cell-value total-p border-r-red-strong">0</td><td class="total-cell-value total-q border-r-red-strong">0</td><td class="total-cell-value total-r">0</td></tr></tfoot>
+                    <thead><tr><th>A</th>${headerCells.split('</th>').slice(0, 10).join('</th>')}</th><th>L</th>${headerCells.split('</th>').slice(10).join('</th>')}</tr></thead>
+                    <tbody class="dataRowsBody">${bodyRows}</tbody>
+                    <tfoot><tr class="border-b-black-strong total-cell"><td class="total-cell-clear" title="Limpar todos os valores deste leito">LIMPAR LEITO</td>${finalFooter}</tr></tfoot>
                 </table>
                 <div class="mt-6 p-3 bg-gray-50 rounded-md">
                     <table class="w-full"><tbody><tr><td class="summary-label text-center">Manhã</td><td class="summary-label text-center">TARDE</td><td class="summary-label text-center">NOITE</td><td class="summary-label text-center" style="width: 20%; vertical-align: middle;"><button class="visual-enter-button" title="Mover para célula abaixo na tabela (Enter)">ENTER ↵</button></td><td class="summary-label text-center" colspan="2">Balanço 24h</td></tr><tr><td class="summary-input"><input type="number" class="sumManha data-input"></td><td class="summary-input"><input type="number" class="sumTarde data-input"></td><td class="summary-input"><input type="number" class="sumNoite data-input" readonly></td><td style="width: 20%;"></td><td class="summary-value text-blue-dark text-center balanco24h" colspan="2" style="font-size: 20px; font-weight: bold;">0</td></tr></tbody></table>
                     <div class="footer-controls">
-                        <div class="completion-status-wrapper">
-                           <label>Preenchimento Concluído:</label>
-                           <input type="checkbox" class="completion-checkbox">
-                        </div>
+                        <div class="completion-status-wrapper"><label>Preenchimento Concluído:</label><input type="checkbox" class="completion-checkbox"></div>
                         <button class="save-button">Salvar Alterações</button>
                     </div>
                 </div>
             </div>`;
         };
         
-        // --- Setup UI: Panes and Tabs ---
+        // --- Setup UI & Firebase ---
         function setupUI() {
             for (let i = 0; i < numberOfBeds; i++) {
-                const tab = document.createElement('button');
-                tab.className = 'tab-button';
-                tab.textContent = `Leito ${i + 1}`;
-                tab.dataset.targetPane = `bed-${i}`;
-                tabsContainer.appendChild(tab);
-                const pane = document.createElement('div');
-                pane.className = 'bed-pane';
-                pane.id = `bed-${i}`;
-                pane.dataset.bedIndex = i;
-                pane.innerHTML = generateBedHTML();
-                bedsContent.appendChild(pane);
+                const tab = document.createElement('button'); tab.className = 'tab-button'; tab.textContent = `Leito ${i + 1}`; tab.dataset.targetPane = `bed-${i}`; tabsContainer.appendChild(tab);
+                const pane = document.createElement('div'); pane.className = 'bed-pane'; pane.id = `bed-${i}`; pane.dataset.bedIndex = i; pane.innerHTML = generateBedHTML(); bedsContent.appendChild(pane);
             }
-            const controlTab = document.createElement('button');
-            controlTab.className = 'tab-button';
-            controlTab.textContent = 'Controle';
-            controlTab.dataset.targetPane = 'control-pane';
-            tabsContainer.appendChild(controlTab);
-            const controlPane = document.createElement('div');
-            controlPane.className = 'control-pane p-4';
-            controlPane.id = 'control-pane';
-            controlPane.innerHTML = `<h2 class="text-xl font-bold mb-4">Painel de Controle Geral</h2><button id="clear-all-beds-btn">Limpar Todos os Leitos</button><ul id="control-panel-status" class="mt-4"></ul>`;
-            bedsContent.appendChild(controlPane);
-            tabsContainer.querySelector('.tab-button').classList.add('active');
-            bedsContent.querySelector('.bed-pane').classList.add('active');
+            const controlTab = document.createElement('button'); controlTab.className = 'tab-button'; controlTab.textContent = 'Controle'; controlTab.dataset.targetPane = 'control-pane'; tabsContainer.appendChild(controlTab);
+            const controlPane = document.createElement('div'); controlPane.className = 'control-pane p-4'; controlPane.id = 'control-pane'; controlPane.innerHTML = `<h2 class="text-xl font-bold mb-4">Painel de Controle Geral</h2><button id="clear-all-beds-btn">Limpar Todos os Leitos</button><ul id="control-panel-status" class="mt-4"></ul>`; bedsContent.appendChild(controlPane);
+            tabsContainer.querySelector('.tab-button').classList.add('active'); bedsContent.querySelector('.bed-pane').classList.add('active');
         }
         setupUI();
         
         document.getElementById('clear-all-beds-btn').addEventListener('click', () => { confirmModal.style.display = 'flex'; });
         
-        // --- Firebase Logic ---
         async function initializeFirebase() {
             try {
                 if (typeof __firebase_config === 'undefined') throw new Error("Configuração do Firebase não encontrada.");
                 const firebaseConfig = JSON.parse(__firebase_config);
                 const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+                db = getFirestore(app); auth = getAuth(app);
                 onAuthStateChanged(auth, user => {
                     if (user) {
-                        userId = user.uid;
-                        userIdDisplay.textContent = `ID: ${userId}`;
-                        statusIndicator.textContent = 'Conectado';
-                        statusIndicator.className = 'saved';
-                        loadAllBedsData();
+                        userId = user.uid; userIdDisplay.textContent = `ID: ${userId}`; statusIndicator.textContent = 'Conectado'; statusIndicator.className = 'saved'; loadAllBedsData();
                     } else {
-                        userId = null;
-                        userIdDisplay.textContent = 'Aguardando autenticação...';
-                        statusIndicator.textContent = 'Desconectado';
-                        unsubscribers.forEach(unsub => unsub());
-                        unsubscribers = [];
+                        userId = null; userIdDisplay.textContent = 'Aguardando autenticação...'; statusIndicator.textContent = 'Desconectado'; unsubscribers.forEach(unsub => unsub()); unsubscribers = [];
                     }
                 });
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-                else await signInAnonymously(auth);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token); else await signInAnonymously(auth);
             } catch (error) {
-                console.error("Falha na inicialização do Firebase:", error);
-                statusIndicator.textContent = `Erro: ${error.message}`;
-                statusIndicator.style.backgroundColor = '#dc3545';
+                console.error("Falha na inicialização do Firebase:", error); statusIndicator.textContent = `Erro: ${error.message}`; statusIndicator.style.backgroundColor = '#dc3545';
             }
         }
         
         // --- Data Handling ---
         function getBedDataFromPane(pane) {
             const data = {};
-            pane.querySelectorAll('.data-input').forEach(input => {
-                const idMatch = input.className.match(/(col-\w+|sumManha|sumTarde|sumNoite)/);
-                if (idMatch) data[idMatch[0]] = input.value;
-            });
-            const checkbox = pane.querySelector('.completion-checkbox');
-            if (checkbox) data.isComplete = checkbox.checked;
-            const balance = pane.querySelector('.balanco24h');
-            if (balance) data.balanco24h = balance.textContent;
+            pane.querySelectorAll('.data-input').forEach(input => { const idMatch = input.className.match(/(col-\w+|sumManha|sumTarde|sumNoite)/); if (idMatch) data[idMatch[0]] = input.value; });
+            const checkbox = pane.querySelector('.completion-checkbox'); if (checkbox) data.isComplete = checkbox.checked;
+            const balance = pane.querySelector('.balanco24h'); if (balance) data.balanco24h = balance.textContent;
             return data;
         }
 
         function setPaneDataFromSnapshot(pane, data) {
             isUpdatingFromFirestore = true;
-            pane.querySelectorAll('.data-input:not([readonly])').forEach(input => {
-                const idMatch = input.className.match(/(col-\w+|sumManha|sumTarde)/);
-                if (idMatch) {
-                    const id = idMatch[0];
-                    input.value = (data && data[id] !== undefined) ? data[id] : '';
-                }
-            });
-            const checkbox = pane.querySelector('.completion-checkbox');
-            if (checkbox) checkbox.checked = !!data?.isComplete;
+            pane.querySelectorAll('.data-input:not([readonly])').forEach(input => { const idMatch = input.className.match(/(col-\w+|sumManha|sumTarde)/); if (idMatch) input.value = (data && data[idMatch[0]] !== undefined) ? data[idMatch[0]] : ''; });
+            const checkbox = pane.querySelector('.completion-checkbox'); if (checkbox) checkbox.checked = !!data?.isComplete;
             calculateAllTotals(pane);
             isUpdatingFromFirestore = false;
         }
 
         async function saveBedData(bedIndex) {
             if (!userId) return;
-            const pane = bedsContent.querySelector(`#bed-${bedIndex}`);
-            if (!pane) return;
-            calculateAllTotals(pane); 
-            const data = getBedDataFromPane(pane);
-            statusIndicator.textContent = 'Salvando...';
-            statusIndicator.className = 'saving';
+            const pane = bedsContent.querySelector(`#bed-${bedIndex}`); if (!pane) return;
+            calculateAllTotals(pane); const data = getBedDataFromPane(pane);
+            statusIndicator.textContent = 'Salvando...'; statusIndicator.className = 'saving';
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', userId, 'beds', `leito-${bedIndex + 1}`);
                 await setDoc(docRef, data, { merge: true });
-                statusIndicator.textContent = 'Salvo na nuvem';
-                statusIndicator.className = 'saved';
-            } catch (error) {
-                console.error("Falha ao salvar dados:", error);
-                statusIndicator.textContent = 'Erro ao salvar';
-            }
+                statusIndicator.textContent = 'Salvo na nuvem'; statusIndicator.className = 'saved';
+            } catch (error) { console.error("Falha ao salvar dados:", error); statusIndicator.textContent = 'Erro ao salvar'; }
         }
 
         function loadAllBedsData() {
             if (!userId) return;
-            unsubscribers.forEach(unsub => unsub());
-            unsubscribers = [];
+            unsubscribers.forEach(unsub => unsub()); unsubscribers = [];
             for (let i = 0; i < numberOfBeds; i++) {
                 const pane = bedsContent.querySelector(`#bed-${i}`);
                 const docRef = doc(db, 'artifacts', appId, 'users', userId, 'beds', `leito-${i + 1}`);
@@ -445,15 +273,13 @@
         
         // --- UI and Calculations ---
         function updateControlPanelStatus() {
-            const statusList = document.getElementById('control-panel-status');
-            if (!statusList) return;
+            const statusList = document.getElementById('control-panel-status'); if (!statusList) return;
             statusList.innerHTML = '';
             for (let i = 0; i < numberOfBeds; i++) {
                 const pane = bedsContent.querySelector(`#bed-${i}`);
                 const isComplete = pane.querySelector('.completion-checkbox').checked;
                 const balanceValue = pane.querySelector('.balanco24h').textContent;
-                const listItem = document.createElement('li');
-                listItem.className = `status-item ${isComplete ? 'completed' : 'incomplete'}`;
+                const listItem = document.createElement('li'); listItem.className = `status-item ${isComplete ? 'completed' : 'incomplete'}`;
                 listItem.innerHTML = `<span>Leito ${i + 1} - ${isComplete ? 'Preenchido' : 'Não Preenchido'}</span> <span class="balance">Balanço: ${balanceValue}</span>`;
                 statusList.appendChild(listItem);
             }
@@ -461,47 +287,30 @@
 
         function calculateAllTotals(pane) {
             const colsToSum = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r'];
-            colsToSum.forEach(col => {
-                const sum = Array.from(pane.querySelectorAll(`tbody input.col-${col}`)).reduce((acc, input) => acc + (parseFloat(input.value) || 0), 0);
-                const totalCell = pane.querySelector(`tfoot .total-${col}`);
-                if (totalCell) totalCell.textContent = sum.toFixed(0);
-            });
-            
-            const sumNoiteInput = pane.querySelector('.sumNoite');
-            let totalGanhosNoite = 0;
-            let totalPerdasNoite = 0;
-            
+            colsToSum.forEach(col => { const sum = Array.from(pane.querySelectorAll(`tbody input.col-${col}`)).reduce((acc, input) => acc + (parseFloat(input.value) || 0), 0); const totalCell = pane.querySelector(`tfoot .total-${col}`); if (totalCell) totalCell.textContent = sum.toFixed(0); });
+            const sumNoiteInput = pane.querySelector('.sumNoite'); let totalGanhosNoite = 0, totalPerdasNoite = 0;
             const nightHours = ['19', '20', '21', '22', '23', '24', '1', '2', '3', '4', '5', '6'];
-            const gainColumns = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
-            const lossColumns = ['m', 'n', 'o', 'p', 'q', 'r'];
-
+            const gainColumns = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']; const lossColumns = ['m', 'n', 'o', 'p', 'q', 'r'];
             pane.querySelectorAll('.data-row').forEach(row => {
                 const hourCell = row.querySelector('.col-time');
                 if (hourCell && nightHours.includes(hourCell.textContent.trim())) {
-                    gainColumns.forEach(col => {
-                        const input = row.querySelector(`input.col-${col}`);
-                        if (input) totalGanhosNoite += parseFloat(input.value) || 0;
-                    });
-                    lossColumns.forEach(col => {
-                        const input = row.querySelector(`input.col-${col}`);
-                        if (input) totalPerdasNoite += parseFloat(input.value) || 0;
-                    });
+                    gainColumns.forEach(col => { const input = row.querySelector(`input.col-${col}`); if (input) totalGanhosNoite += parseFloat(input.value) || 0; });
+                    lossColumns.forEach(col => { const input = row.querySelector(`input.col-${col}`); if (input) totalPerdasNoite += parseFloat(input.value) || 0; });
                 }
             });
-            
             if(sumNoiteInput) sumNoiteInput.value = (totalGanhosNoite - totalPerdasNoite).toFixed(0);
-            
-            const manha = parseFloat(pane.querySelector('.sumManha').value) || 0;
-            const tarde = parseFloat(pane.querySelector('.sumTarde').value) || 0;
-            const noite = parseFloat(sumNoiteInput.value) || 0;
-            const balanco = manha + tarde + noite;
-            const balancoDisplay = pane.querySelector('.balanco24h');
-            balancoDisplay.textContent = balanco.toFixed(0);
-            balancoDisplay.classList.toggle('text-blue-800', balanco >= 0);
-            balancoDisplay.classList.toggle('text-red-800', balanco < 0);
+            const manha = parseFloat(pane.querySelector('.sumManha').value) || 0, tarde = parseFloat(pane.querySelector('.sumTarde').value) || 0, noite = parseFloat(sumNoiteInput.value) || 0;
+            const balanco = manha + tarde + noite; const balancoDisplay = pane.querySelector('.balanco24h');
+            balancoDisplay.textContent = balanco.toFixed(0); balancoDisplay.classList.toggle('text-blue-800', balanco >= 0); balancoDisplay.classList.toggle('text-red-800', balanco < 0);
         }
         
         // --- Event Listeners ---
+        appContainer.addEventListener('focusin', function(event) {
+            if (event.target.matches('input.data-input')) {
+                lastFocusedInput = event.target;
+            }
+        });
+        
         const navigateVertical = (activeInput) => { const c = activeInput.closest('td'), r = c.closest('tr'), a = Array.from(activeInput.closest('.bed-pane').querySelectorAll('.dataRowsBody .data-row')), i = Array.from(r.children).indexOf(c), x = a.indexOf(r), n = a[x + 1] || a[0], next = n?.children[i]?.querySelector('.data-input:not([readonly])'); if (next) { next.focus(); next.select(); } };
         
         tabsContainer.addEventListener('click', (event) => {
@@ -510,22 +319,33 @@
                 const targetPaneId = target.dataset.targetPane;
                 tabsContainer.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
                 bedsContent.querySelectorAll('.bed-pane, .control-pane').forEach(p => p.classList.remove('active'));
-                target.classList.add('active');
-                document.getElementById(targetPaneId).classList.add('active');
+                target.classList.add('active'); document.getElementById(targetPaneId).classList.add('active');
                 if (targetPaneId === 'control-pane') updateControlPanelStatus();
             }
         });
         
         appContainer.addEventListener('click', function(event) {
             const target = event.target;
-            const pane = target.closest('.bed-pane');
-            if (!pane) return;
+            const pane = target.closest('.bed-pane'); if (!pane) return;
             const bedIndex = parseInt(pane.dataset.bedIndex, 10);
-            
-            if (target.matches('.save-button')) {
-                saveBedData(bedIndex);
-            }
+            if (target.matches('.save-button')) { saveBedData(bedIndex); }
             if (target.matches('.clear-col-button')) { pane.querySelectorAll(`input.col-${target.dataset.col}`).forEach(input => input.value = ''); calculateAllTotals(pane); }
+            if (target.matches('.repeat-col-button')) {
+                const colToRepeat = target.dataset.col;
+                if (lastFocusedInput && lastFocusedInput.matches(`.col-${colToRepeat}`) && pane.contains(lastFocusedInput)) {
+                    const currentValue = lastFocusedInput.value;
+                    if (currentValue) {
+                        const currentRow = lastFocusedInput.closest('tr');
+                        const allRows = Array.from(pane.querySelectorAll('.dataRowsBody .data-row'));
+                        const rowIndex = allRows.indexOf(currentRow);
+                        for (let i = rowIndex + 1; i < allRows.length; i++) {
+                            const nextInput = allRows[i].querySelector(`input.col-${colToRepeat}`);
+                            if (nextInput) nextInput.value = currentValue;
+                        }
+                        calculateAllTotals(pane);
+                    }
+                }
+            }
             if (target.matches('.total-cell-clear')) { pane.querySelectorAll('.data-input:not([readonly])').forEach(input => input.value = ''); pane.querySelector('.completion-checkbox').checked = false; calculateAllTotals(pane); saveBedData(bedIndex); }
             if (target.matches('.visual-enter-button') && document.activeElement.matches('.data-input')) navigateVertical(document.activeElement);
         });
@@ -536,20 +356,13 @@
             const pane = target.closest('.bed-pane');
             if (pane) {
                 calculateAllTotals(pane);
-                if (target.matches('.completion-checkbox')) {
-                    updateControlPanelStatus();
-                }
+                if (target.matches('.completion-checkbox')) { updateControlPanelStatus(); }
             }
         });
 
         appContainer.addEventListener('keydown', function(event) {
-            const target = event.target;
-            if (!target.matches('.bed-pane input[type="number"]')) return;
-            const pane = target.closest('.bed-pane');
-            if (!pane) return;
-            if (event.key === 'Enter') { event.preventDefault(); navigateVertical(target); }
-            if (event.ctrlKey && event.key === 'ArrowDown') { /* logic to repeat down */ calculateAllTotals(pane); }
-            if (event.ctrlKey && event.key === 'ArrowUp') { /* logic to clear up */ calculateAllTotals(pane); }
+            if (!event.target.matches('.bed-pane input[type="number"]')) return;
+            if (event.key === 'Enter') { event.preventDefault(); navigateVertical(event.target); }
         });
         
         cancelClearBtn.addEventListener('click', () => { confirmModal.style.display = 'none'; });
