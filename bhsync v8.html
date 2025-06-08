@@ -459,7 +459,6 @@
             const bedIndex = parseInt(pane.dataset.bedIndex, 10);
             let shouldSave = false;
             
-            // LÓGICA DO BOTÃO REPETIR CORRIGIDA
             if (target.matches('.repeat-down-icon')) {
                 const currentInput = target.previousElementSibling;
                 const currentValue = currentInput.value;
@@ -504,10 +503,63 @@
             }
         });
 
+        // --- Keyboard Shortcuts ---
         appContainer.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' && event.target.matches('input[type="number"]')) {
+            const target = event.target;
+            // Garantir que o evento é de um input numérico dentro de um leito
+            if (!target.matches('.bed-pane input[type="number"]')) return;
+
+            const pane = target.closest('.bed-pane');
+            if (!pane) return;
+
+            // Tecla Enter para navegação vertical
+            if (event.key === 'Enter') {
                 event.preventDefault();
-                navigateVertical(event.target);
+                navigateVertical(target);
+            }
+
+            // Tecla Seta para Baixo para repetir o valor na coluna
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                const currentValue = target.value;
+                
+                if (currentValue) { // Só executa se houver um valor
+                    const currentRow = target.closest('tr');
+                    const allRows = Array.from(pane.querySelectorAll('.dataRowsBody .data-row'));
+                    const rowIndex = allRows.indexOf(currentRow);
+                    const colClassMatch = target.classList.value.match(/col-\w+/);
+                    
+                    if (colClassMatch) {
+                        const colClass = colClassMatch[0];
+                        // Começa da próxima linha
+                        for (let i = rowIndex + 1; i < allRows.length; i++) {
+                            const nextInput = allRows[i].querySelector(`.${colClass}`);
+                            if (nextInput) {
+                                nextInput.value = currentValue;
+                            }
+                        }
+                        
+                        calculateAllTotals(pane);
+                        saveBedData(parseInt(pane.dataset.bedIndex, 10));
+                    }
+                }
+            }
+
+            // Tecla Seta para Cima para limpar a coluna inteira
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                const colClassMatch = target.classList.value.match(/col-\w+/);
+
+                if (colClassMatch) {
+                    const colClass = colClassMatch[0];
+                    // Encontra todos os inputs na mesma coluna e os limpa
+                    pane.querySelectorAll(`.data-input.${colClass}`).forEach(input => {
+                        input.value = '';
+                    });
+
+                    calculateAllTotals(pane);
+                    saveBedData(parseInt(pane.dataset.bedIndex, 10));
+                }
             }
         });
 
