@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle com Armazenamento Local</title>
+    <style>
+        /* Estilos gerais */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 8px;
+            color: #333;
+        }
+
+        /* --- Estrutura e Abas --- */
+        .tabs-container {
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ccc;
+            overflow-x: auto;
+            white-space: nowrap;
+            background-color: #f9f9f9;
+            padding: 5px 5px 0 5px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab-button {
+            display: inline-block;
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            background-color: #e9e9e9;
+            margin-right: 4px;
+            border-radius: 6px 6px 0 0;
+            font-weight: bold;
+            color: #555;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .tab-button.active {
+            background-color: #0070c0;
+            color: white;
+            border-color: #0070c0;
+        }
+
+        .bed-pane, .control-pane { display: none; }
+        .bed-pane.active, .control-pane.active { display: block; }
+        .app-container { background-color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 16px; border-radius: 8px; }
+
+        /* --- Estilos da Tabela --- */
+        .table-custom {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 1400px;
+            margin: auto;
+            table-layout: fixed;
+        }
+
+        .table-custom th, .table-custom td {
+            border: 1px solid #000;
+            padding: 0;
+            text-align: center;
+            font-size: 12px;
+            height: 30px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .table-custom th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            white-space: normal;
+            padding: 4px 2px;
+        }
+
+        .input-icon-wrapper { display: flex; align-items: center; height: 100%; width: 100%; background-color: white; }
+        .table-custom input[type="number"] {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 12px;
+            padding: 4px 2px;
+            box-sizing: border-box;
+            background-color: transparent;
+            -moz-appearance: textfield;
+        }
+        .table-custom input[type="number"]::-webkit-outer-spin-button,
+        .table-custom input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* --- Cores e Colunas Específicas --- */
+        .col-time { font-weight: bold; color: white; width: 45px; }
+        .col-j { border-left: 2px solid black !important; border-right: 2px solid black !important; }
+        .bg-red-custom { background-color: #ff0000; }
+        .bg-blue-custom { background-color: #0070c0; }
+        .bg-green-custom-input { background-color: #c6efce; color: #006100; }
+        .border-r-red-strong { border-right: 2px solid red; }
+        .border-b-black-strong { border-bottom: 2px solid black; }
+
+        /* --- Estilos do Rodapé da Tabela --- */
+        .total-cell-actions { display: flex; justify-content: space-around; align-items: center; padding: 0 2px; height: 100%; }
+        .footer-button {
+            cursor: pointer; color: white; border: none; border-radius: 4px;
+            width: 18px; height: 18px; font-size: 14px; line-height: 18px;
+            text-align: center; font-weight: bold; transition: background-color 0.2s;
+        }
+        .clear-col-button { background-color: #e57373; }
+        .clear-col-button:hover { background-color: #c00000; }
+        .repeat-col-button { background-color: #64b5f6; }
+        .repeat-col-button:hover { background-color: #2196f3; }
+        .total-cell-value { font-weight: bold; font-size: 14px; }
+        .total-cell-clear { cursor: pointer; color: #c00000; font-weight: bold; }
+        .total-cell-clear:hover { text-decoration: underline; color: #ff0000; }
+        
+        /* --- Destaque dos Inputs de Resumo --- */
+        .summary-input input[type="number"] {
+            font-size: 18px !important; font-weight: bold; border: 2px solid #0070c0 !important;
+            background-color: #f0f8ff !important; text-align: center; padding: 8px !important;
+            border-radius: 6px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .summary-input input[readonly] { background-color: #e9ecef !important; border-color: #ced4da !important; color: #495057; }
+        
+        /* --- Controles do Rodapé do Leito --- */
+        .footer-controls { display: flex; justify-content: space-between; align-items: center; padding: 12px; gap: 20px; flex-wrap: wrap; background-color: #f8f9fa; border-top: 1px solid #ddd; }
+        .completion-status-wrapper { display: flex; align-items: center; font-size: 14px; }
+        .completion-status-wrapper label { margin-right: 8px; font-weight: bold; }
+        .completion-checkbox { width: 20px; height: 20px; cursor: pointer; }
+        .save-button {
+            background-color: #0070c0; color: white; font-weight: bold; padding: 8px 16px;
+            border-radius: 5px; border: none; cursor: pointer; transition: background-color 0.3s;
+        }
+        .save-button:hover { background-color: #005a9a; }
+        
+        /* --- Painel de Controle --- */
+        #control-panel-status { list-style: none; padding: 0; margin-top: 20px; }
+        .status-item {
+            font-size: 1.1rem; padding: 10px 15px; border-radius: 5px; margin-bottom: 8px; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center; transition: background-color 0.3s;
+        }
+        .status-item .balance {
+            font-weight: normal; font-size: 1rem; color: #333; background-color: rgba(255, 255, 255, 0.7);
+            padding: 2px 8px; border-radius: 10px;
+        }
+        .status-item.completed { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-item.incomplete { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        #clear-all-beds-btn {
+            background-color: #dc3545; color: white; font-weight: bold; padding: 10px 20px;
+            border-radius: 5px; border: none; cursor: pointer; transition: background-color 0.3s;
+        }
+        #clear-all-beds-btn:hover { background-color: #c82333; }
+        
+        /* --- Modal de Confirmação --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-width: 400px; }
+        .modal-content p { font-size: 16px; margin-bottom: 20px; }
+        .modal-content button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 0 10px; }
+        #confirm-clear-btn { background-color: #dc3545; color: white; }
+        #cancel-clear-btn { background-color: #6c757d; color: white; }
+        
+    </style>
+</head>
+<body>
+
+    <div id="appContainer" class="app-container">
+        <div class="tabs-container"></div>
+        <div class="beds-content"></div>
+    </div>
+    
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <p>Tem certeza que deseja apagar TODOS os dados de TODOS os 10 leitos? Esta ação não pode ser desfeita.</p>
+            <button id="confirm-clear-btn">Sim, Apagar Tudo</button>
+            <button id="cancel-clear-btn">Cancelar</button>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Elementos da DOM e Estado da Aplicação ---
+    const appContainer = document.getElementById('appContainer');
+    const tabsContainer = appContainer.querySelector('.tabs-container');
+    const bedsContent = appContainer.querySelector('.beds-content');
+    const confirmModal = document.getElementById('confirm-modal');
+    const confirmClearBtn = document.getElementById('confirm-clear-btn');
+    const cancelClearBtn = document.getElementById('cancel-clear-btn');
+    
+    const numberOfBeds = 10;
+    const APP_PREFIX = 'bhsync-'; // Prefixo para as chaves no localStorage
+    let lastFocusedInput;
+    let debounceTimer;
+
+    // --- Geração do HTML Dinâmico (sem alterações) ---
+    const generateBedHTML = () => {
+        const hours = [19, 20, 21, 22, 23, 24, 1, 2, 3, 4, 5, 6];
+        const cols = [
+            { id: 'b', label: 'INS' }, { id: 'c', label: 'VO' }, { id: 'd', label: 'PLA' }, { id: 'e', label: 'MED' }, { id: 'f', label: 'NOR' }, { id: 'g', label: 'DOR' },
+            { id: 'h', label: 'FEN' }, { id: 'i', label: 'BIC' }, { id: 'j', label: 'BIC' }, { id: 'k', label: 'HEM' }, { id: 'm', label: 'VO SNG' }, { id: 'n', label: 'DIUR' },
+            { id: 'o', label: 'EVA C' }, { id: 'p', label: 'HD' }, { id: 'q', label: 'DRE 1' }, { id: 'r', label: 'DRE 2' }
+        ];
+
+        let headerHTML = `<thead><tr><th class="col-time">A</th>`;
+        cols.slice(0, 10).forEach(c => headerHTML += `<th class="${c.id === 'j' ? 'col-j' : ''} border-r-red-strong">${c.label.replace(' ', '<br>')}</th>`);
+        headerHTML += `<th class="col-time">L</th>`;
+        cols.slice(10).forEach(c => headerHTML += `<th class="border-r-red-strong">${c.label.replace(' ', '<br>')}</th>`);
+        headerHTML += `</tr></thead>`;
+
+        let bodyHTML = '<tbody>';
+        hours.forEach(hour => {
+            const timeCellClass = [19, 20, 21, 22, 23].includes(hour) ? 'bg-red-custom' : 'bg-blue-custom';
+            const lastRowClass = hour === 6 ? 'border-b-black-strong' : '';
+            bodyHTML += `<tr class="data-row ${lastRowClass}"><td class="col-time ${timeCellClass}">${hour}</td>`;
+            cols.slice(0, 10).forEach(c => {
+                const inputClass = ![19, 20, 21, 22, 23].includes(hour) && c.id === 'b' ? 'bg-green-custom-input' : '';
+                bodyHTML += `<td class="${c.id === 'j' ? 'col-j' : ''} border-r-red-strong"><div class="input-icon-wrapper ${inputClass}"><input type="number" class="data-input" data-hour="${hour}" data-col="${c.id}" autocomplete="off"></div></td>`;
+            });
+            bodyHTML += `<td class="col-time bg-gray-300 text-black">${hour}</td>`;
+            cols.slice(10).forEach(c => {
+                bodyHTML += `<td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input" data-hour="${hour}" data-col="${c.id}" autocomplete="off"></div></td>`;
+            });
+            bodyHTML += '</tr>';
+        });
+        bodyHTML += '</tbody>';
+        
+        let footerHTML = `<tfoot><tr class="border-b-black-strong total-cell"><td class="total-cell-clear" title="Limpar todos os valores deste leito">LIMPAR LEITO</td>`;
+        cols.slice(0, 10).forEach(c => footerHTML += `<td class="${c.id === 'j' ? 'col-j' : ''} border-r-red-strong"><div class="total-cell-actions"><button class="footer-button repeat-col-button" data-col="${c.id}" title="Repetir Valor (/)">⟱</button><span class="total-cell-value total-${c.id}">0</span><button class="footer-button clear-col-button" data-col="${c.id}" title="Limpar Coluna (*)">X</button></div></td>`);
+        footerHTML += `<td></td>`;
+        cols.slice(10).forEach(c => footerHTML += `<td class="border-r-red-strong"><div class="total-cell-actions"><button class="footer-button repeat-col-button" data-col="${c.id}" title="Repetir Valor (/)">⟱</button><span class="total-cell-value total-${c.id}">0</span><button class="footer-button clear-col-button" data-col="${c.id}" title="Limpar Coluna (*)">X</button></div></td>`);
+        footerHTML += '</tr></tfoot>`;
+
+        return `
+        <div class="w-full overflow-x-auto">
+            <table class="table-custom">${headerHTML}${bodyHTML}${footerHTML}</table>
+            <div style="margin-top:24px;" class="p-3 bg-gray-50 rounded-md">
+                <div class="text-xs text-gray-500 mb-2 text-center">Atalhos: Pressione <strong>/</strong> para repetir valor, <strong>*</strong> para limpar para baixo, <strong>Enter</strong> para descer.</div>
+                <table class="w-full">
+                    <tbody>
+                        <tr><td class="summary-label text-center">Manhã</td><td class="summary-label text-center">TARDE</td><td class="summary-label text-center">NOITE</td><td class="summary-label text-center" colspan="2">Balanço 24h</td></tr>
+                        <tr>
+                            <td class="summary-input"><input type="number" class="sumManha data-input" data-col="sumManha"></td>
+                            <td class="summary-input"><input type="number" class="sumTarde data-input" data-col="sumTarde"></td>
+                            <td class="summary-input"><input type="number" class="sumNoite data-input" data-col="sumNoite" readonly></td>
+                            <td class="summary-value text-blue-dark text-center balanco24h" colspan="2" style="font-size: 20px; font-weight: bold;">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="footer-controls">
+                    <div class="completion-status-wrapper"><label>Preenchimento Concluído:</label><input type="checkbox" class="completion-checkbox data-input" data-col="isComplete"></div>
+                    <button class="save-button">Guardar Agora</button>
+                </div>
+            </div>
+        </div>`;
+    };
+    
+    // --- Funções de Manipulação de Dados (localStorage) ---
+    const getBedDataFromPane = (pane) => {
+        const data = {};
+        pane.querySelectorAll('.data-input').forEach(input => {
+            const key = input.dataset.col;
+            const hour = input.dataset.hour;
+            const storageKey = hour ? `${key}-${hour}` : key;
+            const value = input.type === 'checkbox' ? input.checked : input.value;
+            if ((input.type === 'checkbox' && value === true) || (input.type !== 'checkbox' && value)) {
+                data[storageKey] = value;
+            }
+        });
+        return data;
+    };
+
+    const setPaneDataFromLocal = (pane, data) => {
+        if (!data) return;
+        pane.querySelectorAll('.data-input').forEach(input => {
+            const key = input.dataset.col;
+            const hour = input.dataset.hour;
+            const storageKey = hour ? `${key}-${hour}` : key;
+            if (input.type === 'checkbox') {
+                input.checked = data[storageKey] || false;
+            } else {
+                input.value = data[storageKey] || '';
+            }
+        });
+        calculateAllTotals(pane);
+    };
+
+    const saveBedData = (bedIndex, force = false) => {
+        const pane = bedsContent.querySelector(`#bed-${bedIndex}`);
+        if (!pane) return;
+        
+        const performSave = () => {
+            calculateAllTotals(pane);
+            const data = getBedDataFromPane(pane);
+            try {
+                // Guarda os dados como uma string JSON no localStorage
+                localStorage.setItem(`${APP_PREFIX}leito-${bedIndex + 1}`, JSON.stringify(data));
+            } catch (error) {
+                console.error("Falha ao guardar os dados no localStorage:", error);
+                alert("Não foi possível guardar os dados. O armazenamento pode estar cheio.");
+            }
+        };
+
+        clearTimeout(debounceTimer);
+        if (force) {
+            performSave();
+        } else {
+            // Guarda automaticamente após 1.5 segundos de inatividade
+            debounceTimer = setTimeout(performSave, 1500);
+        }
+    };
+
+    function loadAllBedsData() {
+        for (let i = 0; i < numberOfBeds; i++) {
+            const pane = bedsContent.querySelector(`#bed-${i}`);
+            if(!pane) continue;
+            try {
+                const savedData = localStorage.getItem(`${APP_PREFIX}leito-${i + 1}`);
+                if (savedData) {
+                    setPaneDataFromLocal(pane, JSON.parse(savedData));
+                }
+            } catch(error) {
+                console.error(`Falha ao carregar dados para o Leito ${i+1}: `, error);
+            }
+        }
+        updateControlPanelStatus();
+    }
+    
+    // --- Funções de UI e Cálculos ---
+    function updateControlPanelStatus() {
+        const statusList = document.getElementById('control-panel-status');
+        if (!statusList) return;
+        statusList.innerHTML = '';
+        for (let i = 0; i < numberOfBeds; i++) {
+            const pane = bedsContent.querySelector(`#bed-${i}`);
+            if (!pane) continue;
+            const isComplete = pane.querySelector('.completion-checkbox').checked;
+            const balanceValue = pane.querySelector('.balanco24h').textContent;
+            const listItem = document.createElement('li');
+            listItem.className = `status-item ${isComplete ? 'completed' : 'incomplete'}`;
+            listItem.innerHTML = `<span>Leito ${i + 1} - ${isComplete ? 'Preenchido' : 'Pendente'}</span> <span class="balance">Balanço: ${balanceValue}</span>`;
+            statusList.appendChild(listItem);
+        }
+    }
+
+    function calculateAllTotals(pane) {
+        const cols = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r'];
+        let totalGanhos = 0, totalPerdas = 0;
+        const gainColumns = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
+        const lossColumns = ['m', 'n', 'o', 'p', 'q', 'r'];
+        
+        cols.forEach(colId => {
+            const sum = Array.from(pane.querySelectorAll(`tbody .data-input[data-col="${colId}"]`)).reduce((acc, input) => acc + (Number(input.value) || 0), 0);
+            const totalCell = pane.querySelector(`tfoot .total-${colId}`);
+            if (totalCell) totalCell.textContent = sum;
+            if (gainColumns.includes(colId)) totalGanhos += sum;
+            if (lossColumns.includes(colId)) totalPerdas += sum;
+        });
+
+        const sumNoiteInput = pane.querySelector('.sumNoite');
+        if(sumNoiteInput) sumNoiteInput.value = (totalGanhos - totalPerdas);
+        
+        const manha = Number(pane.querySelector('.sumManha').value) || 0;
+        const tarde = Number(pane.querySelector('.sumTarde').value) || 0;
+        const noite = Number(sumNoiteInput.value) || 0;
+        pane.querySelector('.balanco24h').textContent = manha + tarde + noite;
+    }
+    
+    // --- Inicialização da UI ---
+    function setupUI() {
+        // Cria abas e painéis para cada leito
+        for (let i = 0; i < numberOfBeds; i++) {
+            const tab = document.createElement('button'); tab.className = 'tab-button'; tab.textContent = `Leito ${i + 1}`; tab.dataset.targetPane = `bed-${i}`; tabsContainer.appendChild(tab);
+            const pane = document.createElement('div'); pane.className = 'bed-pane'; pane.id = `bed-${i}`; pane.dataset.bedIndex = i; pane.innerHTML = generateBedHTML(); bedsContent.appendChild(pane);
+        }
+        // Cria aba e painel de controle
+        const controlTab = document.createElement('button'); controlTab.className = 'tab-button'; controlTab.textContent = 'Controle'; controlTab.dataset.targetPane = 'control-pane'; tabsContainer.appendChild(controlTab);
+        const controlPane = document.createElement('div'); controlPane.className = 'control-pane p-4'; controlPane.id = 'control-pane'; controlPane.innerHTML = `<h2 class="text-xl font-bold mb-4">Painel de Controle Geral</h2><button id="clear-all-beds-btn">Limpar Todos os Leitos</button><ul id="control-panel-status" class="mt-4"></ul>`; bedsContent.appendChild(controlPane);
+        
+        // Ativa a primeira aba por padrão
+        tabsContainer.querySelector('.tab-button').classList.add('active');
+        bedsContent.querySelector('.bed-pane').classList.add('active');
+        
+        document.getElementById('clear-all-beds-btn').addEventListener('click', () => confirmModal.style.display = 'flex');
+    }
+
+    // --- Listeners de Eventos ---
+    tabsContainer.addEventListener('click', (event) => {
+        if (event.target.matches('.tab-button')) {
+            const targetPaneId = event.target.dataset.targetPane;
+            tabsContainer.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
+            bedsContent.querySelectorAll('.bed-pane, .control-pane').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            const targetPane = document.getElementById(targetPaneId);
+            if (targetPane) {
+               targetPane.classList.add('active');
+            }
+            if (targetPaneId === 'control-pane') updateControlPanelStatus();
+        }
+    });
+    
+    appContainer.addEventListener('click', function(event) {
+        const target = event.target;
+        const pane = target.closest('.bed-pane');
+        if (!pane) return;
+        const bedIndex = parseInt(pane.dataset.bedIndex, 10);
+        
+        if (target.matches('.save-button')) { saveBedData(bedIndex, true); }
+        
+        if (target.matches('.total-cell-clear')) {
+            pane.querySelectorAll('.data-input:not([readonly])').forEach(input => {
+                if (input.type === 'checkbox') input.checked = false; else input.value = '';
+            });
+            saveBedData(bedIndex, true);
+        }
+        
+        if (target.matches('.clear-col-button')) {
+            const colToClear = target.dataset.col;
+            if (colToClear) {
+                pane.querySelectorAll(`tbody .data-input[data-col="${colToClear}"]`).forEach(input => { input.value = ''; });
+                calculateAllTotals(pane);
+                saveBedData(bedIndex, true);
+            }
+        }
+        
+        if (target.matches('.repeat-col-button')) {
+            const colToRepeat = target.dataset.col;
+            if (lastFocusedInput && lastFocusedInput.matches(`[data-col="${colToRepeat}"]`) && pane.contains(lastFocusedInput)) {
+                const currentValue = lastFocusedInput.value;
+                if (currentValue) {
+                    const allRows = Array.from(pane.querySelectorAll('tbody tr.data-row'));
+                    const currentRowIndex = allRows.indexOf(lastFocusedInput.closest('tr'));
+                    for (let i = currentRowIndex + 1; i < allRows.length; i++) {
+                        const nextInput = allRows[i].querySelector(`.data-input[data-col="${colToRepeat}"]`);
+                        if (nextInput) nextInput.value = currentValue;
+                    }
+                    calculateAllTotals(pane);
+                    saveBedData(bedIndex, true);
+                }
+            }
+        }
+    });
+    
+    appContainer.addEventListener('focusin', function(event) {
+        if (event.target.matches('input.data-input')) lastFocusedInput = event.target;
+    });
+
+    appContainer.addEventListener('input', function(event) {
+        const pane = event.target.closest('.bed-pane');
+        if (pane) {
+            calculateAllTotals(pane);
+            if (event.target.matches('.completion-checkbox')) {
+                updateControlPanelStatus();
+            }
+            saveBedData(parseInt(pane.dataset.bedIndex, 10));
+        }
+    });
+
+    appContainer.addEventListener('keydown', function(event) {
+        if (!lastFocusedInput || !event.target.matches('.data-input')) return;
+        const pane = lastFocusedInput.closest('.bed-pane');
+        if (!pane) return;
+        const bedIndex = parseInt(pane.dataset.bedIndex, 10);
+        const tableBody = lastFocusedInput.closest('tbody');
+        if (!tableBody) return;
+
+        const handleShortcut = (key, action) => {
+            if (event.key === key) {
+                event.preventDefault();
+                action();
+                calculateAllTotals(pane);
+                saveBedData(bedIndex, true);
+            }
+        };
+        
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const currentCell = lastFocusedInput.closest('td');
+            const currentRow = currentCell.closest('tr');
+            const allRows = Array.from(tableBody.querySelectorAll('tr.data-row'));
+            const cellIndex = Array.from(currentRow.children).indexOf(currentCell);
+            const rowIndex = allRows.indexOf(currentRow);
+            if (rowIndex < allRows.length - 1) {
+                const nextRow = allRows[rowIndex + 1];
+                const nextCell = nextRow.children[cellIndex];
+                const nextInput = nextCell?.querySelector('.data-input:not([readonly])');
+                if (nextInput) { nextInput.focus(); nextInput.select(); }
+            }
+        }
+
+        handleShortcut('/', () => {
+            const col = lastFocusedInput.dataset.col;
+            const value = lastFocusedInput.value;
+            if (value && col) {
+                const rows = Array.from(tableBody.querySelectorAll('tr.data-row'));
+                const currentIndex = rows.indexOf(lastFocusedInput.closest('tr'));
+                for (let i = currentIndex + 1; i < rows.length; i++) {
+                    const input = rows[i].querySelector(`.data-input[data-col="${col}"]`);
+                    if (input) input.value = value;
+                }
+            }
+        });
+
+        handleShortcut('*', () => {
+            const col = lastFocusedInput.dataset.col;
+            if (col) {
+                const rows = Array.from(tableBody.querySelectorAll('tr.data-row'));
+                const currentIndex = rows.indexOf(lastFocusedInput.closest('tr'));
+                for (let i = currentIndex; i < rows.length; i++) {
+                    const input = rows[i].querySelector(`.data-input[data-col="${col}"]`);
+                    if (input) input.value = '';
+                }
+            }
+        });
+    });
+    
+    cancelClearBtn.addEventListener('click', () => { confirmModal.style.display = 'none'; });
+    
+    // Botão de limpar tudo foi modificado para não recarregar a página
+    confirmClearBtn.addEventListener('click', () => {
+        for (let i = 0; i < numberOfBeds; i++) {
+            localStorage.removeItem(`${APP_PREFIX}leito-${i + 1}`);
+            const pane = bedsContent.querySelector(`#bed-${i}`);
+            if (pane) {
+                // Limpa todos os campos de input no painel
+                pane.querySelectorAll('.data-input:not([readonly])').forEach(input => {
+                    if (input.type === 'checkbox') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                });
+                // Recalcula os totais para zerar a UI
+                calculateAllTotals(pane);
+            }
+        }
+        // Atualiza o painel de controle para refletir o estado limpo
+        updateControlPanelStatus();
+        confirmModal.style.display = 'none';
+    });
+
+    // --- Inicialização da Aplicação ---
+    setupUI();
+    loadAllBedsData();
+});
+</script>
+
+</body>
+</html>
