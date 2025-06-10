@@ -346,7 +346,6 @@
                     mhForm: '#mentalHealthFormStatus',
                     mhPrint: '#mentalHealthPrintStatus',
                 },
-                // REMOVED visitorCounter selector
                 dateInputs: '[placeholder="DD/MM/AAAA"]',
                 logoImage: '#logoImage',
             }
@@ -526,7 +525,6 @@
                 this.populateRiskTable();
                 this.updateTotalScore();
                 this.setupEventListeners();
-                // REMOVED call to updateVisitorCounter
             }
 
             checkDependencies() {
@@ -654,7 +652,20 @@
             
             setupEventListeners() {
                 const { buttons, modals } = this.elements;
-                buttons.openMhModal.onclick = () => modals.mentalHealth.style.display = "flex";
+                
+                // MODIFIED: Added gtag event on click
+                buttons.openMhModal.onclick = () => {
+                    // Send a custom event to Google Analytics
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'open_mental_health_form', {
+                            'event_category': 'Form Interaction',
+                            'event_label': 'Click to open Mental Health Modal'
+                        });
+                    }
+                    // Show the modal
+                    modals.mentalHealth.style.display = "flex";
+                };
+
                 buttons.closeMhModal.onclick = () => modals.mentalHealth.style.display = "none";
                 buttons.cancelMhModal.onclick = () => modals.mentalHealth.style.display = "none";
                 buttons.clearAll.onclick = () => modals.confirmClear.style.display = 'flex';
@@ -797,8 +808,6 @@
                 if (status.mhPrint) status.mhPrint.style.display = 'none';
                 if (showMsg) Utils.showStatus(status.mhForm || status.global, 'Ficha de Saúde Mental limpa!', 'success');
             }
-
-            // REMOVED updateVisitorCounter function
         }
 
         // --- Initial Load ---
