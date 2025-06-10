@@ -8,6 +8,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- jsPDF library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DL2G8HQ2VK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-DL2G8HQ2VK');
+    </script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -139,16 +150,6 @@
             max-height: 70px; 
             margin-top: 0.5rem;
             margin-bottom: 0.5rem; 
-        }
-        #visitorCounter {
-            position: fixed;
-            bottom: 10px;
-            right: 15px;
-            font-size: 0.75rem; /* text-xs */
-            color: #9ca3af; /* gray-400 */
-            background-color: rgba(255, 255, 255, 0.5);
-            padding: 2px 6px;
-            border-radius: 4px;
         }
     </style>
 </head>
@@ -292,471 +293,518 @@
         </div>
     </div>
 
-    <div id="visitorCounter"></div>
+    <!-- REMOVED the old visitor counter div -->
 
     <script type="module">
-        // --- DOM Elements ---
-        const escalaRiscoTableBody = document.getElementById('escalaRiscoTable')?.querySelector('tbody');
-        const escoreTotalOutput = document.getElementById('escore_total');
-        const responsavelFamiliarInput = document.getElementById('responsavel_familiar');
-        const esfResponsavelInput = document.getElementById('esf_responsavel');
-        const microAreaInput = document.getElementById('micro_area'); 
-        const responsavelClassificacaoInput = document.getElementById('responsavel_classificacao');
-        const globalStatusMessageDiv = document.getElementById('globalStatusMessage'); 
-
-        // Modals
-        const mentalHealthModal = document.getElementById('mentalHealthModal');
-        const confirmClearModal = document.getElementById('confirmClearModal');
-
-        // Buttons
-        const openMentalHealthFormButton = document.getElementById('openMentalHealthForm');
-        const closeMentalHealthModalButton = document.getElementById('closeMentalHealthModalButton'); 
-        const cancelMentalHealthFormButton = document.getElementById('cancelMentalHealthFormButton'); 
-        const clearAllFormsButton = document.getElementById('clearAllFormsButton'); 
-        const printReportButton = document.getElementById('printReportButton'); 
-        const printMentalHealthReportButton = document.getElementById('printMentalHealthReportButton');
-        const clearMentalHealthFormButton = document.getElementById('clearMentalHealthFormButton');
-        const cancelClearButton = document.getElementById('cancelClearButton');
-        const confirmClearButton = document.getElementById('confirmClearButton');
-        
-        // Forms & Statuses
-        const mentalHealthForm = document.getElementById('mentalHealthForm');
-        const mentalHealthFormStatusDiv = document.getElementById('mentalHealthFormStatus');
-        const printStatusDiv = document.getElementById('printStatus'); 
-        const mentalHealthPrintStatus = document.getElementById('mentalHealthPrintStatus');
-        const visitorCounterDiv = document.getElementById('visitorCounter');
-
-        // --- Escala de Risco Items Configuration ---
-        const itensEscala = [
-            { id: "acamado", nome: "Acamado", descricao: "Toda pessoa restrita ao domicílio, por falta de habilidade e/ou incapacidade de locomoção por si só a qualquer unidade de saúde.", escoreBase: 3, tipo: "sim_nao" },
-            { id: "deficiencia_fisica", nome: "Deficiência física", descricao: "Qualquer condição que limite a mobilidade ou a capacidade física do indivíduo, exigindo cuidados ou suporte especial.", escoreBase: 3, tipo: "sim_nao" },
-            { id: "deficiencia_mental", nome: "Deficiência mental", descricao: "Qualquer condição que afete o desenvolvimento intelectual ou a saúde mental, necessitando de suporte contínuo.", escoreBase: 3, tipo: "sim_nao" },
-            { id: "baixas_condicoes_saneamento", nome: "Baixas condições de saneamento", descricao: "Domicílio sem acesso à rede de esgoto ou fossa séptica, e/ou sem coleta de lixo regular.", escoreBase: 3, tipo: "sim_nao" },
-            { id: "desnutricao_grave", nome: "Desnutrição grave", descricao: "Indivíduo com diagnóstico clínico ou indicadores antropométricos (peso/altura) de desnutrição grave.", escoreBase: 3, tipo: "sim_nao" },
-            { id: "drogadicao", nome: "Drogadição", descricao: "Uso abusivo de substâncias psicoativas por um ou mais membros, com impacto negativo na dinâmica familiar.", escoreBase: 2, tipo: "sim_nao" },
-            { id: "desemprego", nome: "Desemprego", descricao: "Principal provedor da família ou múltiplos membros adultos sem emprego formal ou fonte de renda estável.", escoreBase: 2, tipo: "sim_nao" },
-            { id: "analfabetismo", nome: "Analfabetismo", descricao: "Membros adultos da família que não sabem ler ou escrever, dificultando o acesso à informação e serviços.", escoreBase: 1, tipo: "sim_nao" },
-            { id: "menor_6_meses", nome: "Menor de 6 meses", descricao: "Presença de criança com menos de 6 meses no domicílio, período de maior vulnerabilidade.", escoreBase: 1, tipo: "sim_nao" },
-            { id: "maior_70_anos", nome: "Maior de 70 anos", descricao: "Presença de idoso com 70 anos ou mais, que pode apresentar maior fragilidade e necessidade de acompanhamento.", escoreBase: 1, tipo: "sim_nao" },
-            { id: "hipertensao", nome: "Hipertensão arterial sistêmica", descricao: "Presença de membro(s) com diagnóstico de HAS, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
-            { id: "diabetes", nome: "Diabetes Mellitus", descricao: "Presença de membro(s) com diagnóstico de DM, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
-            { id: "densidade_domiciliar", nome: "Relação morador/cômodo", descricao: "Relação entre o número de moradores e o de cômodos da casa (excluindo banheiros e áreas de serviço).", tipo: "densidade", fixedMultiplier: 1 } 
-        ];
-
-        // --- Functions ---
-
-        /**
-         * Populates the risk scale table with items and their descriptions.
-         */
-        function popularTabelaEscala() {
-            if (!escalaRiscoTableBody) return;
-            escalaRiscoTableBody.innerHTML = ''; 
-            itensEscala.forEach(item => {
-                const row = escalaRiscoTableBody.insertRow();
-                row.id = `row_${item.id}`;
-                
-                const cellNome = row.insertCell();
-                cellNome.innerHTML = `
-                    <span class="font-medium text-gray-800">${item.nome}</span>
-                    <small class="sentinel-description">${item.descricao}</small>
-                `;
-
-                const cellInput = row.insertCell();
-                cellInput.classList.add("align-middle", "text-center");
-                if (item.tipo === "sim_nao") {
-                    cellInput.innerHTML = `
-                        <div class="radio-group justify-center">
-                            <input type="radio" id="${item.id}_sim" name="radio_${item.id}" value="${item.escoreBase}" class="custom-radio-lg">
-                            <label for="${item.id}_sim" class="custom-label-lg">Sim</label>
-                            <input type="radio" id="${item.id}_nao" name="radio_${item.id}" value="0" class="custom-radio-lg" checked>
-                            <label for="${item.id}_nao" class="custom-label-lg">Não</label>
-                        </div>
-                    `;
-                } else if (item.tipo === "densidade") {
-                    cellInput.innerHTML = `
-                        <div class="flex flex-col sm:flex-row gap-2 items-center justify-center">
-                            <div class="flex items-center gap-1">
-                                <label for="num_moradores" class="text-xs whitespace-nowrap">Moradores:</label>
-                                <input type="number" id="num_moradores" min="0" class="p-1 text-sm">
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <label for="num_comodos" class="text-xs whitespace-nowrap">Cômodos:</label>
-                                <input type="number" id="num_comodos" min="1" value="1" class="p-1 text-sm">
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                const cellMultiplicador = row.insertCell();
-                cellMultiplicador.classList.add("text-center", "align-middle");
-                if (item.fixedMultiplier !== undefined) {
-                    cellMultiplicador.innerHTML = `<span class="fixed-multiplier-text">${item.fixedMultiplier}</span>`;
-                } else {
-                    cellMultiplicador.innerHTML = `<input type="number" id="${item.id}_multiplicador" value="1" min="0" step="0.5" class="multiplicador-input mx-auto">`;
-                }
-                
-                const cellPontos = row.insertCell();
-                cellPontos.id = `${item.id}_pontos`;
-                cellPontos.textContent = "0.00";
-                cellPontos.classList.add('font-semibold', 'text-center', "align-middle");
-            });
-            // Add event listeners after creating the elements
-            escalaRiscoTableBody.querySelectorAll('input').forEach(input => {
-                input.addEventListener('change', atualizarEscoreTotal);
-                input.addEventListener('input', atualizarEscoreTotal);
-            });
-        }
-
-        /**
-         * Calculates and updates the total risk score.
-         */
-        function atualizarEscoreTotal() {
-            let totalPontos = 0;
-            itensEscala.forEach(item => {
-                let multiplicador = 1; 
-                if (item.fixedMultiplier !== undefined) {
-                    multiplicador = item.fixedMultiplier;
-                } else {
-                    const multiplicadorInput = document.getElementById(`${item.id}_multiplicador`);
-                    multiplicador = parseFloat(multiplicadorInput?.value) || 0; 
-                }
-                let pontosItem = 0;
-                let escoreConsiderado = 0;
-                if (item.tipo === "sim_nao") {
-                    const radioSim = document.getElementById(`${item.id}_sim`);
-                    if (radioSim && radioSim.checked) {
-                        escoreConsiderado = parseFloat(radioSim.value);
-                    }
-                    pontosItem = escoreConsiderado * multiplicador;
-                } else if (item.tipo === "densidade") {
-                    const moradoresInput = document.getElementById('num_moradores');
-                    const comodosInput = document.getElementById('num_comodos');
-                    const moradores = parseInt(moradoresInput?.value) || 0;
-                    const comodos = parseInt(comodosInput?.value) || 1; 
-                    let basePontosDensidade = 0;
-                    if (moradores > 0 && comodos > 0) { 
-                        const relacao = moradores / comodos;
-                        if (relacao > 1) basePontosDensidade = 3;
-                        else if (relacao === 1) basePontosDensidade = 2;
-                    }
-                    pontosItem = basePontosDensidade * multiplicador; 
-                }
-                const pontosOutput = document.getElementById(`${item.id}_pontos`);
-                if (pontosOutput) pontosOutput.textContent = pontosItem.toFixed(2);
-                totalPontos += pontosItem;
-            });
-            if (escoreTotalOutput) escoreTotalOutput.textContent = totalPontos.toFixed(2);
-        }
-
-        /**
-         * Shows a status message to the user.
-         */
-        function showStatusMessage(element, message, type = 'success') {
-            if (!element) return;
-            element.textContent = message;
-            element.className = `status-message status-${type}`; 
-            element.style.display = 'block';
-            setTimeout(() => { element.style.display = 'none'; }, 3000);
-        }
-
-        /**
-         * Sets up modal interaction logic.
-         */
-        function setupModalListeners() {
-            if (openMentalHealthFormButton) openMentalHealthFormButton.onclick = () => { mentalHealthModal.style.display = "flex"; };
-            if (closeMentalHealthModalButton) closeMentalHealthModalButton.onclick = () => { mentalHealthModal.style.display = "none"; };
-            if (cancelMentalHealthFormButton) cancelMentalHealthFormButton.onclick = () => { mentalHealthModal.style.display = "none"; };
-            if (clearAllFormsButton) clearAllFormsButton.onclick = () => { confirmClearModal.style.display = 'flex'; };
-            if (cancelClearButton) cancelClearButton.onclick = () => { confirmClearModal.style.display = 'none'; };
-            if (confirmClearButton) confirmClearButton.onclick = () => {
-                confirmClearModal.style.display = 'none';
-                clearAllFormsHandler();
-            };
-            window.onclick = (event) => {
-                if (event.target == mentalHealthModal) mentalHealthModal.style.display = "none";
-                if (event.target == confirmClearModal) confirmClearModal.style.display = "none";
+        // --- Configuration ---
+        const AppConfig = {
+            riskScaleItems: [
+                { id: "acamado", nome: "Acamado", descricao: "Toda pessoa restrita ao domicílio, por falta de habilidade e/ou incapacidade de locomoção por si só a qualquer unidade de saúde.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "deficiencia_fisica", nome: "Deficiência física", descricao: "Qualquer condição que limite a mobilidade ou a capacidade física do indivíduo, exigindo cuidados ou suporte especial.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "deficiencia_mental", nome: "Deficiência mental", descricao: "Qualquer condição que afete o desenvolvimento intelectual ou a saúde mental, necessitando de suporte contínuo.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "baixas_condicoes_saneamento", nome: "Baixas condições de saneamento", descricao: "Domicílio sem acesso à rede de esgoto ou fossa séptica, e/ou sem coleta de lixo regular.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "desnutricao_grave", nome: "Desnutrição grave", descricao: "Indivíduo com diagnóstico clínico ou indicadores antropométricos (peso/altura) de desnutrição grave.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "drogadicao", nome: "Drogadição", descricao: "Uso abusivo de substâncias psicoativas por um ou mais membros, com impacto negativo na dinâmica familiar.", escoreBase: 2, tipo: "sim_nao" },
+                { id: "desemprego", nome: "Desemprego", descricao: "Principal provedor da família ou múltiplos membros adultos sem emprego formal ou fonte de renda estável.", escoreBase: 2, tipo: "sim_nao" },
+                { id: "analfabetismo", nome: "Analfabetismo", descricao: "Membros adultos da família que não sabem ler ou escrever, dificultando o acesso à informação e serviços.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "menor_6_meses", nome: "Menor de 6 meses", descricao: "Presença de criança com menos de 6 meses no domicílio, período de maior vulnerabilidade.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "maior_70_anos", nome: "Maior de 70 anos", descricao: "Presença de idoso com 70 anos ou mais, que pode apresentar maior fragilidade e necessidade de acompanhamento.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "hipertensao", nome: "Hipertensão arterial sistêmica", descricao: "Presença de membro(s) com diagnóstico de HAS, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "diabetes", nome: "Diabetes Mellitus", descricao: "Presença de membro(s) com diagnóstico de DM, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "densidade_domiciliar", nome: "Relação morador/cômodo", descricao: "Relação entre o número de moradores e o de cômodos da casa (excluindo banheiros e áreas de serviço).", tipo: "densidade", fixedMultiplier: 1 } 
+            ],
+            selectors: {
+                riskTableBody: '#escalaRiscoTable tbody',
+                totalScoreOutput: '#escore_total',
+                mainInfo: {
+                    respFamiliar: '#responsavel_familiar',
+                    esf: '#esf_responsavel',
+                    microArea: '#micro_area',
+                    respClass: '#responsavel_classificacao',
+                },
+                modals: {
+                    mentalHealth: '#mentalHealthModal',
+                    confirmClear: '#confirmClearModal',
+                },
+                buttons: {
+                    openMhModal: '#openMentalHealthForm',
+                    closeMhModal: '#closeMentalHealthModalButton',
+                    cancelMhModal: '#cancelMentalHealthFormButton',
+                    clearAll: '#clearAllFormsButton',
+                    printMain: '#printReportButton',
+                    printMh: '#printMentalHealthReportButton',
+                    clearMh: '#clearMentalHealthFormButton',
+                    cancelClear: '#cancelClearButton',
+                    confirmClear: '#confirmClearButton',
+                },
+                forms: {
+                    mentalHealth: '#mentalHealthForm',
+                },
+                status: {
+                    global: '#globalStatusMessage',
+                    print: '#printStatus',
+                    mhForm: '#mentalHealthFormStatus',
+                    mhPrint: '#mentalHealthPrintStatus',
+                },
+                // REMOVED visitorCounter selector
+                dateInputs: '[placeholder="DD/MM/AAAA"]',
+                logoImage: '#logoImage',
             }
-        }
-        
-        /**
-         * Converts an image to a Base64 encoded string for PDF embedding.
-         */
-        function getImageBase64(imageElement) {
-            return new Promise((resolve, reject) => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.onload = () => {
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    resolve(canvas.toDataURL('image/png'));
-                };
-                img.onerror = (err) => reject('Could not load image for PDF');
-                img.src = imageElement.src;
-            });
-        }
-        
-        /**
-         * Adds a header with logo to the PDF.
-         */
-        async function addPdfHeader(doc, logoBase64) {
-            const pageMargin = 10;
-            const pageWidth = doc.internal.pageSize.getWidth();
-            let yPosition = 15;
-            if (logoBase64) {
-                try {
-                    const logoWidth = 40; const logoHeight = 15;
-                    const logoX = (pageWidth - logoWidth) / 2;
-                    doc.addImage(logoBase64, 'PNG', logoX, yPosition - 8, logoWidth, logoHeight);
-                    yPosition += logoHeight;
-                } catch (e) { console.error("Failed to add logo to PDF:", e); }
-            }
-            return yPosition;
-        }
+        };
 
-        /**
-         * Helper function to add text to jsPDF, manages Y position and auto page breaks.
-         */
-        function addTextToPdf(doc, text, x, currentY, options = {}) {
-            const { fontSize = 10, style = 'normal', align = 'left', color = '#000000', maxWidth } = options;
-            const pageMargin = 10;
-            const usableWidth = doc.internal.pageSize.getWidth() - (2 * pageMargin);
+        // --- Utility Functions ---
+        const Utils = {
+            $: (selector) => document.querySelector(selector),
+            $$: (selector) => document.querySelectorAll(selector),
             
-            doc.setFontSize(fontSize);
-            doc.setFont('helvetica', style);
-            doc.setTextColor(color);
-            
-            const textLines = doc.splitTextToSize(text, maxWidth || usableWidth);
-            const lineHeight = fontSize * 1.15 / doc.internal.scaleFactor;
-            const textBlockHeight = textLines.length * lineHeight;
+            showStatus(element, message, type = 'success') {
+                if (!element) return;
+                element.textContent = message;
+                element.className = `status-message status-${type}`; 
+                element.style.display = 'block';
+                setTimeout(() => { element.style.display = 'none'; }, 4000);
+            },
 
-            if (currentY + textBlockHeight > doc.internal.pageSize.getHeight() - pageMargin) { 
-                doc.addPage();
-                currentY = pageMargin; 
-            }
-            
-            doc.text(textLines, x, currentY, { align: align === 'left' ? undefined : align });
-            return currentY + textBlockHeight + (lineHeight * 0.2); 
-        }
+            formatDateInput(e) {
+                let input = e.target;
+                input.value = input.value
+                    .replace(/\D/g, '')
+                    .replace(/(\d{2})(\d)/, '$1/$2')
+                    .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3')
+                    .replace(/(\d{2}\/\d{2}\/\d{4}).*/, '$1');
+            },
 
-        /**
-         * Generates and triggers download of the main PDF report.
-         */
-        async function printMainReportHandler() {
-            try {
-                const { jsPDF } = window.jspdf; 
-                if (!jsPDF) {
-                    showStatusMessage(printStatusDiv, 'Biblioteca jsPDF não carregada.', 'error');
-                    return;
-                }
-                
-                const logoImg = document.getElementById('logoImage');
-                let logoBase64 = null;
-                if (logoImg) try { logoBase64 = await getImageBase64(logoImg); } catch (e) { showStatusMessage(printStatusDiv, 'Atenção: Não foi possível carregar o logo para o PDF.', 'error'); }
-
-                const doc = new jsPDF();
-                const lineSpacing = 7; 
-                const sectionSpacing = 10;
-                const indent = 15;
-                const pageMargin = 10;
-                const pageWidth = doc.internal.pageSize.getWidth();
-
-                let yPosition = await addPdfHeader(doc, logoBase64);
-
-                yPosition = addTextToPdf(doc, "Relatório de Avaliação de Risco e Saúde Mental", pageWidth / 2, yPosition, { fontSize: 16, style: 'bold', align: 'center' });
-                yPosition += lineSpacing / 2;
-                yPosition = addTextToPdf(doc, `Data: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth / 2, yPosition, { fontSize: 8, style: 'italic', align: 'center' });
-                yPosition += sectionSpacing;
-
-                yPosition = addTextToPdf(doc, "Escala de Risco Familiar de Coelho-Savassi", pageMargin, yPosition, { fontSize: 14, style: 'bold' });
-                yPosition += lineSpacing;
-
-                yPosition = addTextToPdf(doc, `Responsável Familiar: ${responsavelFamiliarInput?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
-                yPosition = addTextToPdf(doc, `ESF Responsável: ${esfResponsavelInput?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
-                yPosition = addTextToPdf(doc, `Micro Área: ${microAreaInput?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
-                yPosition = addTextToPdf(doc, `Responsável pela Classificação: ${responsavelClassificacaoInput?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
-                yPosition += lineSpacing; 
-
-                itensEscala.forEach(item => {
-                    let presenteTextoPdf = "Não Respondido";
-                    if (item.tipo === "sim_nao") {
-                        const radioSim = document.getElementById(`${item.id}_sim`);
-                        if (radioSim && radioSim.checked) presenteTextoPdf = "Sim";
-                        else presenteTextoPdf = "Não";
-                    }
-                    if(presenteTextoPdf === "Sim" || item.tipo === 'densidade'){
-                        yPosition = addTextToPdf(doc, `• ${item.nome}`, indent, yPosition, {fontSize: 10, style: 'bold'});
-                        yPosition = addTextToPdf(doc, item.descricao, indent + 5, yPosition, {fontSize: 8, style: 'italic', color: '#555555'});
-
-                        let details = '';
-                        if (item.tipo === "sim_nao") {
-                            const multiplicador = document.getElementById(`${item.id}_multiplicador`)?.value || "1";
-                            details += `Presente: Sim, Multiplicador: ${multiplicador}`;
-                        } else {
-                            const moradores = document.getElementById('num_moradores')?.value || "0";
-                            const comodos = document.getElementById('num_comodos')?.value || "1";
-                             details += `Moradores: ${moradores}, Cômodos: ${comodos}`;
-                        }
-                        const pontos = document.getElementById(`${item.id}_pontos`)?.textContent || "0.00";
-                        details += `, Pontos: ${pontos}`;
-                        yPosition = addTextToPdf(doc, details, indent + 5, yPosition, {fontSize: 9});
-                        yPosition += 2;
-                    }
+            getImageBase64(imageElement) {
+                return new Promise((resolve, reject) => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.onerror = (err) => reject('Could not load image for PDF');
+                    img.src = imageElement.src;
                 });
-                yPosition += lineSpacing * 0.5;
-                const escoreTotal = escoreTotalOutput?.textContent || "0.00";
-                yPosition = addTextToPdf(doc, `Escore Total de Risco: ${escoreTotal}`, pageMargin, yPosition, { fontSize: 12, style: 'bold' });
-                yPosition += sectionSpacing;
+            }
+        };
 
-                yPosition = printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin); 
+        // --- PDF Generation Module ---
+        const PdfGenerator = {
+            async generate(mainData, mhData, logoBase64, isMhOnly = false) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const pageMargin = 10;
+                const indent = 15;
+                const lineSpacing = 6;
+                const sectionSpacing = 10;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                
+                let yPos = await this.addHeader(doc, logoBase64, pageWidth);
 
-                const finalPageNum = doc.internal.getNumberOfPages();
+                if (isMhOnly) {
+                    yPos = this.addMentalHealthSection(doc, mhData, yPos, { pageMargin, indent, lineSpacing, sectionSpacing, pageWidth }, true);
+                } else {
+                    yPos = this.addMainReportSection(doc, mainData, yPos, { pageMargin, indent, lineSpacing, sectionSpacing, pageWidth });
+                    yPos = this.addMentalHealthSection(doc, mhData, yPos, { pageMargin, indent, lineSpacing, sectionSpacing, pageWidth });
+                }
+
+                this.addFooter(doc, pageMargin, pageWidth);
+                return doc;
+            },
+
+            addText(doc, text, x, y, options = {}) {
+                const { fontSize = 10, style = 'normal', align = 'left', color = '#000000', maxWidth } = options;
+                const pageMargin = 10;
+                const usableWidth = doc.internal.pageSize.getWidth() - (2 * pageMargin);
+                
+                doc.setFontSize(fontSize);
+                doc.setFont('helvetica', style);
+                doc.setTextColor(color);
+                
+                const textLines = doc.splitTextToSize(text, maxWidth || usableWidth);
+                const lineHeight = fontSize * 1.15 / doc.internal.scaleFactor;
+                const textBlockHeight = textLines.length * lineHeight;
+
+                if (y + textBlockHeight > doc.internal.pageSize.getHeight() - pageMargin) { 
+                    doc.addPage();
+                    y = pageMargin; 
+                }
+                
+                doc.text(textLines, x, y, { align: align === 'left' ? undefined : align });
+                return y + textBlockHeight + (lineHeight * 0.2); 
+            },
+            
+            async addHeader(doc, logoBase64, pageWidth) {
+                let yPos = 15;
+                if (logoBase64) {
+                    try {
+                        const logoWidth = 40; const logoHeight = 15;
+                        const logoX = (pageWidth - logoWidth) / 2;
+                        doc.addImage(logoBase64, 'PNG', logoX, yPos - 8, logoWidth, logoHeight);
+                        yPos += logoHeight;
+                    } catch (e) { console.error("Failed to add logo to PDF:", e); }
+                }
+                return yPos;
+            },
+
+            addMainReportSection(doc, data, yPos, layout) {
+                yPos = this.addText(doc, "Relatório de Avaliação de Risco Familiar", layout.pageWidth / 2, yPos, { fontSize: 16, style: 'bold', align: 'center' });
+                yPos += layout.lineSpacing / 2;
+                yPos = this.addText(doc, `Data: ${new Date().toLocaleString('pt-BR')}`, layout.pageWidth / 2, yPos, { fontSize: 8, style: 'italic', align: 'center' });
+                yPos += layout.sectionSpacing;
+
+                yPos = this.addText(doc, `Responsável Familiar: ${data.mainInfo.respFamiliar || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos = this.addText(doc, `ESF Responsável: ${data.mainInfo.esf || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos = this.addText(doc, `Micro Área: ${data.mainInfo.microArea || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos = this.addText(doc, `Responsável pela Classificação: ${data.mainInfo.respClass || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos += layout.lineSpacing; 
+
+                data.riskItems.forEach(item => {
+                    yPos = this.addText(doc, `• ${item.nome}`, layout.indent, yPos, {fontSize: 10, style: 'bold'});
+                    yPos = this.addText(doc, item.descricao, layout.indent + 5, yPos, {fontSize: 8, style: 'italic', color: '#555555'});
+                    const details = `Detalhes: ${item.details}, Pontos: ${item.points}`;
+                    yPos = this.addText(doc, details, layout.indent + 5, yPos, {fontSize: 9});
+                    yPos += 2;
+                });
+                
+                yPos += layout.lineSpacing * 0.5;
+                yPos = this.addText(doc, `Escore Total de Risco: ${data.totalScore}`, layout.pageMargin, yPos, { fontSize: 12, style: 'bold' });
+                yPos += layout.sectionSpacing;
+                
+                return yPos;
+            },
+
+            addMentalHealthSection(doc, data, yPos, layout, forceTitle = false) {
+                 if (!data.isStarted) return yPos;
+
+                if (yPos + 60 > doc.internal.pageSize.getHeight() - layout.pageMargin) { doc.addPage(); yPos = layout.pageMargin; }
+
+                yPos = this.addText(doc, "Ficha de Sinais de Alerta em Saúde Mental", forceTitle ? layout.pageWidth / 2 : layout.pageMargin, yPos, { fontSize: 14, style: 'bold', align: forceTitle ? 'center' : 'left' });
+                yPos += layout.lineSpacing;
+                
+                const mhDetails = Object.entries(data.details).map(([key, val]) => `${key}: ${val || 'N/P'}`).join(' | ');
+                yPos = this.addText(doc, mhDetails, layout.indent, yPos, {fontSize: 9});
+                yPos += layout.lineSpacing;
+                
+                yPos = this.addText(doc, "Questões Norteadoras:", layout.indent, yPos, { fontSize: 10, style: 'bold' });
+                data.questions.forEach(q => {
+                    yPos = this.addText(doc, `• ${q.text}${q.details ? `: ${q.details}`: ''}`, layout.indent + 5, yPos, {fontSize: 9});
+                });
+                yPos += layout.lineSpacing;
+
+                yPos = this.addText(doc, `Registrado por: ${data.registeredBy || 'N/P'} | Data: ${data.registrationDate || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos += layout.sectionSpacing; 
+                
+                return yPos;
+            },
+            
+            addFooter(doc, pageMargin, pageWidth) {
+                 const finalPageNum = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= finalPageNum; i++) {
                     doc.setPage(i);
                     doc.setFontSize(8); doc.setTextColor(150); 
                     doc.text(`Página ${i} de ${finalPageNum}`, pageWidth - pageMargin, doc.internal.pageSize.getHeight() - 10, {align: 'right'});
                 }
-                doc.save('relatorio_risco_familia.pdf');
-                showStatusMessage(printStatusDiv, 'Relatório PDF Completo gerado com sucesso!', 'success');
-            } catch (error) {
-                console.error("Erro ao gerar PDF principal:", error);
-                showStatusMessage(printStatusDiv, `Erro ao gerar PDF: ${error.message}.`, 'error');
             }
-        }
+        };
 
-        /**
-         * Generates and triggers download of the Mental Health PDF report.
-         */
-        async function printMentalHealthReportHandler() {
-             try {
-                const { jsPDF } = window.jspdf; 
-                if (!jsPDF) { showStatusMessage(mentalHealthPrintStatus, 'Biblioteca jsPDF não carregada.', 'error'); return; }
-                const isMhFormEffectivelyStarted = document.getElementById('mh_nome_completo')?.value || document.getElementById('mh_data_nascimento')?.value;
-                if (!isMhFormEffectivelyStarted) { showStatusMessage(mentalHealthPrintStatus, 'Nenhum dado da Ficha de Saúde Mental para imprimir.', 'error'); return; }
-                
-                const logoImg = document.getElementById('logoImage');
-                let logoBase64 = null;
-                if (logoImg) try { logoBase64 = await getImageBase64(logoImg); } catch(e) { /* ignore */ }
+        // --- Main Application Logic ---
+        class RiskAssessmentApp {
+            constructor(config) {
+                this.config = config;
+                this.elements = this.getElements();
+                this.pdfReady = false;
+                this.logoBase64 = null;
+            }
 
-                const doc = new jsPDF();
-                let yPosition = await addPdfHeader(doc, logoBase64);
-                yPosition = printMentalHealthSectionToPdf(doc, yPosition, 7, 10, 15, 10, true);
+            init() {
+                this.checkDependencies();
+                this.populateRiskTable();
+                this.updateTotalScore();
+                this.setupEventListeners();
+                // REMOVED call to updateVisitorCounter
+            }
 
-                const finalPageNum = doc.internal.getNumberOfPages();
-                for (let i = 1; i <= finalPageNum; i++) {
-                    doc.setPage(i);
-                    doc.setFontSize(8); doc.setTextColor(150); 
-                    doc.text(`Página ${i} de ${finalPageNum}`, doc.internal.pageSize.getWidth() - 10, doc.internal.pageSize.getHeight() - 10, {align: 'right'});
+            checkDependencies() {
+                if (typeof window.jspdf === 'undefined') {
+                    this.pdfReady = false;
+                    Utils.showStatus(this.elements.status.global, 'Biblioteca de PDF (jsPDF) não pode ser carregada. A impressão está desativada.', 'error');
+                    this.elements.buttons.printMain.disabled = true;
+                    this.elements.buttons.printMh.disabled = true;
+                } else {
+                    this.pdfReady = true;
+                    Utils.getImageBase64(this.elements.logoImage)
+                        .then(base64 => this.logoBase64 = base64)
+                        .catch(err => Utils.showStatus(this.elements.status.print, 'Aviso: O logo não pôde ser carregado para o PDF.', 'error'));
                 }
-                doc.save('relatorio_saude_mental.pdf');
-                showStatusMessage(mentalHealthPrintStatus, 'Relatório da Ficha de Saúde Mental gerado!', 'success');
-            } catch (error) {
-                console.error("Erro ao gerar PDF da Saúde Mental:", error);
-                showStatusMessage(mentalHealthPrintStatus, `Erro ao gerar PDF (SM): ${error.message}.`, 'error');
             }
-        }
-        
-        /**
-         * Helper function to print mental health section to a jsPDF document.
-         */
-        function printMentalHealthSectionToPdf(doc, yPosition, lineSpacing, sectionSpacing, indent, pageMargin, forceTitle = false) {
-            const isMhFormStarted = document.getElementById('mh_nome_completo')?.value || document.getElementById('mh_data_nascimento')?.value;
-            if (isMhFormStarted) {
-                if (yPosition + 60 > doc.internal.pageSize.getHeight() - pageMargin) { doc.addPage(); yPosition = pageMargin; }
 
-                yPosition = addTextToPdf(doc, "Ficha de Sinais de Alerta em Saúde Mental", forceTitle ? doc.internal.pageSize.getWidth()/2 : pageMargin, yPosition, { fontSize: 14, style: 'bold', align: forceTitle ? 'center' : 'left' });
-                yPosition += lineSpacing;
-                
-                const mhData = [
-                    { label: "Nome", value: document.getElementById('mh_nome_completo')?.value }, { label: "Data Nasc.", value: document.getElementById('mh_data_nascimento')?.value },
-                    { label: "Nome Social", value: document.getElementById('mh_nome_social')?.value }, { label: "Sexo", value: (() => { const sel = document.getElementById('mh_sexo'); return sel?.value ? sel.options[sel.selectedIndex].text : ''; })() },
-                    { label: "Microárea", value: document.getElementById('mh_microarea_mh')?.value }
-                ];
-                yPosition = addTextToPdf(doc, mhData.map(d => `${d.label}: ${d.value || 'N/P'}`).join(' | '), indent, yPosition, {fontSize: 9});
-                yPosition += lineSpacing;
-                
-                yPosition = addTextToPdf(doc, "Questões Norteadoras:", indent, yPosition, { fontSize: 10, style: 'bold' });
-                const q1a = document.getElementById('q1a')?.checked, q1b = document.getElementById('q1b')?.checked, q1c = document.getElementById('q1c')?.checked;
-                if(q1a || q1b || q1c) yPosition = addTextToPdf(doc, `• Comprometimento funcional: Escola(${q1a?'Sim':'Não'}), Trabalho(${q1b?'Sim':'Não'}), Tarefas(${q1c?'Sim':'Não'})`, indent + 5, yPosition, {fontSize: 9});
-                const q2_check = document.getElementById('q2_check')?.checked;
-                const q2_details = document.getElementById('q2_details')?.value;
-                if(q2_check) yPosition = addTextToPdf(doc, `• Palavras como "mais nervoso"...: Sim${q2_details ? `. Detalhes: ${q2_details}` : ''}`, indent + 5, yPosition, {fontSize: 9});
-                
-                const questions = [
-                    { id: 'q3', text: 'Tentou se machucar ou se matar?' }, { id: 'q4', text: 'Relato de agressividade?' },
-                    { id: 'q5', text: 'Consumo de substâncias prejudicando rotina?' }, { id: 'q6', text: 'Dificuldade escolar?' },
-                    { id: 'q7', text: 'Mudança de comportamento?' }, { id: 'q8', text: 'Falando coisas sem sentido / confuso?' }
-                ];
-                questions.forEach(q => {
-                    if(document.getElementById(q.id)?.checked) yPosition = addTextToPdf(doc, `• ${q.text}: Sim`, indent + 5, yPosition, {fontSize: 9});
+            getElements() {
+                const elements = {};
+                for (const key in this.config.selectors) {
+                    const selector = this.config.selectors[key];
+                    if (typeof selector === 'string') {
+                        elements[key] = Utils.$(selector);
+                    } else {
+                        elements[key] = {};
+                        for(const subKey in selector) {
+                            elements[key][subKey] = Utils.$(selector[subKey]);
+                        }
+                    }
+                }
+                return elements;
+            }
+
+            populateRiskTable() {
+                const tableBody = this.elements.riskTableBody;
+                if (!tableBody) return;
+                tableBody.innerHTML = ''; 
+                this.config.riskScaleItems.forEach(item => {
+                    const row = tableBody.insertRow();
+                    row.id = `row_${item.id}`;
+                    
+                    row.insertCell().innerHTML = `
+                        <span class="font-medium text-gray-800">${item.nome}</span>
+                        <small class="sentinel-description">${item.descricao}</small>`;
+
+                    const inputCell = row.insertCell();
+                    inputCell.classList.add("align-middle", "text-center");
+                    if (item.tipo === "sim_nao") {
+                        inputCell.innerHTML = `
+                            <div class="radio-group justify-center">
+                                <input type="radio" id="${item.id}_sim" name="radio_${item.id}" value="${item.escoreBase}" class="custom-radio-lg">
+                                <label for="${item.id}_sim" class="custom-label-lg">Sim</label>
+                                <input type="radio" id="${item.id}_nao" name="radio_${item.id}" value="0" class="custom-radio-lg" checked>
+                                <label for="${item.id}_nao" class="custom-label-lg">Não</label>
+                            </div>`;
+                    } else if (item.tipo === "densidade") {
+                        inputCell.innerHTML = `
+                            <div class="flex flex-col sm:flex-row gap-2 items-center justify-center">
+                                <div class="flex items-center gap-1">
+                                    <label for="num_moradores" class="text-xs whitespace-nowrap">Moradores:</label>
+                                    <input type="number" id="num_moradores" min="0" class="p-1 text-sm">
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <label for="num_comodos" class="text-xs whitespace-nowrap">Cômodos:</label>
+                                    <input type="number" id="num_comodos" min="1" value="1" class="p-1 text-sm">
+                                </div>
+                            </div>`;
+                    }
+                    
+                    const multiplierCell = row.insertCell();
+                    multiplierCell.classList.add("text-center", "align-middle");
+                    if (item.fixedMultiplier !== undefined) {
+                        multiplierCell.innerHTML = `<span class="fixed-multiplier-text">${item.fixedMultiplier}</span>`;
+                    } else {
+                        multiplierCell.innerHTML = `<input type="number" id="${item.id}_multiplicador" value="1" min="0" step="0.5" class="multiplicador-input mx-auto">`;
+                    }
+                    
+                    const pointsCell = row.insertCell();
+                    pointsCell.id = `${item.id}_pontos`;
+                    pointsCell.textContent = "0.00";
+                    pointsCell.classList.add('font-semibold', 'text-center', "align-middle");
                 });
-                yPosition += lineSpacing;
-                yPosition = addTextToPdf(doc, `Registrado por: ${document.getElementById('mh_registrado_por')?.value || 'N/P'} | Data: ${document.getElementById('mh_data_registro')?.value || 'N/P'}`, indent, yPosition, {fontSize: 9});
-                yPosition += sectionSpacing; 
+
+                tableBody.querySelectorAll('input').forEach(input => {
+                    input.addEventListener('change', () => this.updateTotalScore());
+                    input.addEventListener('input', () => this.updateTotalScore());
+                });
             }
-            return yPosition;
-        }
+
+            updateTotalScore() {
+                let totalPontos = 0;
+                this.config.riskScaleItems.forEach(item => {
+                    let multiplicador = 1; 
+                    if (item.fixedMultiplier !== undefined) {
+                        multiplicador = item.fixedMultiplier;
+                    } else {
+                        const multiplicadorInput = Utils.$(`#${item.id}_multiplicador`);
+                        multiplicador = parseFloat(multiplicadorInput?.value) || 0; 
+                    }
+                    
+                    let pontosItem = 0;
+                    if (item.tipo === "sim_nao") {
+                        const radioSim = Utils.$(`#${item.id}_sim`);
+                        if (radioSim && radioSim.checked) {
+                            pontosItem = parseFloat(radioSim.value) * multiplicador;
+                        }
+                    } else if (item.tipo === "densidade") {
+                        const moradores = parseInt(Utils.$('#num_moradores')?.value) || 0;
+                        const comodos = parseInt(Utils.$('#num_comodos')?.value) || 1; 
+                        let basePontosDensidade = 0;
+                        if (moradores > 0 && comodos > 0) { 
+                            const relacao = moradores / comodos;
+                            if (relacao > 1) basePontosDensidade = 3;
+                            else if (relacao === 1) basePontosDensidade = 2;
+                        }
+                        pontosItem = basePontosDensidade * multiplicador; 
+                    }
+                    
+                    const pontosOutput = Utils.$(`#${item.id}_pontos`);
+                    if (pontosOutput) pontosOutput.textContent = pontosItem.toFixed(2);
+                    totalPontos += pontosItem;
+                });
+                
+                if (this.elements.totalScoreOutput) this.elements.totalScoreOutput.textContent = totalPontos.toFixed(2);
+            }
+            
+            setupEventListeners() {
+                const { buttons, modals } = this.elements;
+                buttons.openMhModal.onclick = () => modals.mentalHealth.style.display = "flex";
+                buttons.closeMhModal.onclick = () => modals.mentalHealth.style.display = "none";
+                buttons.cancelMhModal.onclick = () => modals.mentalHealth.style.display = "none";
+                buttons.clearAll.onclick = () => modals.confirmClear.style.display = 'flex';
+                buttons.cancelClear.onclick = () => modals.confirmClear.style.display = 'none';
+                buttons.confirmClear.onclick = () => {
+                    modals.confirmClear.style.display = 'none';
+                    this.clearAllForms();
+                };
+                
+                buttons.printMain.onclick = () => this.handlePrint('main');
+                buttons.printMh.onclick = () => this.handlePrint('mh_only');
+                buttons.clearMh.onclick = () => this.clearMentalHealthForm(true);
+
+                window.onclick = (event) => {
+                    if (event.target == modals.mentalHealth) modals.mentalHealth.style.display = "none";
+                    if (event.target == modals.confirmClear) modals.confirmClear.style.display = "none";
+                };
+
+                Utils.$$(this.config.selectors.dateInputs).forEach(input => {
+                    input.addEventListener('input', Utils.formatDateInput);
+                });
+            }
+
+            collectMainReportData() {
+                const mainInfo = {};
+                for(const key in this.elements.mainInfo) {
+                    mainInfo[key] = this.elements.mainInfo[key]?.value;
+                }
+
+                const riskItems = [];
+                this.config.riskScaleItems.forEach(item => {
+                    const isPresent = item.tipo === 'sim_nao' ? Utils.$(`#${item.id}_sim`).checked : false;
+                    const points = Utils.$(`#${item.id}_pontos`)?.textContent;
+
+                    if((isPresent || item.tipo === 'densidade') && parseFloat(points) > 0) {
+                        let details = '';
+                         if (item.tipo === "sim_nao") {
+                            details = `Presente: Sim, Multiplicador: ${Utils.$(`#${item.id}_multiplicador`)?.value || "1"}`;
+                         } else {
+                            details = `Moradores: ${Utils.$('#num_moradores')?.value || "0"}, Cômodos: ${Utils.$('#num_comodos')?.value || "1"}`;
+                         }
+                        riskItems.push({
+                            nome: item.nome,
+                            descricao: item.descricao,
+                            details: details,
+                            points: points || "0.00"
+                        });
+                    }
+                });
+
+                return {
+                    mainInfo,
+                    riskItems,
+                    totalScore: this.elements.totalScoreOutput?.textContent || "0.00"
+                };
+            }
+            
+            collectMentalHealthData() {
+                const form = this.elements.forms.mentalHealth;
+                const getVal = (id) => form.querySelector(`#${id}`)?.value;
+                const getCheck = (id) => form.querySelector(`#${id}`)?.checked;
+                const getSelectText = (id) => {
+                    const sel = form.querySelector(`#${id}`);
+                    return sel?.value ? sel.options[sel.selectedIndex].text : '';
+                }
+
+                const questions = [
+                    { check: getCheck('q1a'), text: 'Comprometimento - Escola' },
+                    { check: getCheck('q1b'), text: 'Comprometimento - Trabalho' },
+                    { check: getCheck('q1c'), text: 'Comprometimento - Tarefas Domésticas' },
+                    { check: getCheck('q2_check'), text: 'Relato de "surto", "nervosismo"', details: getVal('q2_details') },
+                    { check: getCheck('q3'), text: 'Tentou se machucar/matar?' },
+                    { check: getCheck('q4'), text: 'Relato de agressividade?' },
+                    { check: getCheck('q5'), text: 'Uso de substâncias prejudicando rotina?' },
+                    { check: getCheck('q6'), text: 'Dificuldade escolar?' },
+                    { check: getCheck('q7'), text: 'Mudança de comportamento?' },
+                    { check: getCheck('q8'), text: 'Falando coisas sem sentido / confuso?' }
+                ].filter(q => q.check).map(q => ({ text: q.text, details: q.details }));
 
 
-        /**
-         * Clears all fields from all forms.
-         */
-        function clearAllFormsHandler() {
-            document.getElementById('responsavel_familiar').value = '';
-            document.getElementById('esf_responsavel').value = '';
-            document.getElementById('micro_area').value = '';
-            document.getElementById('responsavel_classificacao').value = '';
-            popularTabelaEscala(); // Re-populates and resets table to default state
-            atualizarEscoreTotal(); 
-            clearMentalHealthFormOnlyHandler(false); 
-            if (printStatusDiv) printStatusDiv.style.display = 'none';
-            showStatusMessage(globalStatusMessageDiv, 'Todos os formulários foram limpos!', 'success');
-        }
+                return {
+                    isStarted: getVal('mh_nome_completo') || getVal('mh_data_nascimento'),
+                    details: {
+                        'Nome': getVal('mh_nome_completo'),
+                        'Data Nasc.': getVal('mh_data_nascimento'),
+                        'Nome Social': getVal('mh_nome_social'),
+                        'Sexo': getSelectText('mh_sexo'),
+                        'Microárea': getVal('mh_microarea_mh')
+                    },
+                    questions,
+                    registeredBy: getVal('mh_registrado_por'),
+                    registrationDate: getVal('mh_data_registro'),
+                }
+            }
+            
+            async handlePrint(type) {
+                if (!this.pdfReady) {
+                    Utils.showStatus(this.elements.status.print, 'Erro: A função de impressão está indisponível.', 'error');
+                    return;
+                }
 
-        /**
-         * Clears only the Mental Health Form fields.
-         */
-        function clearMentalHealthFormOnlyHandler(showMsg = true) {
-            if (mentalHealthForm) mentalHealthForm.reset();
-            if (mentalHealthFormStatusDiv) mentalHealthFormStatusDiv.style.display = 'none';
-            if (mentalHealthPrintStatus) mentalHealthPrintStatus.style.display = 'none';
-            if (showMsg) showStatusMessage(mentalHealthFormStatusDiv || globalStatusMessageDiv, 'Ficha de Saúde Mental limpa!', 'success');
-        }
-        
-        /**
-         * Formats date inputs with slashes as the user types.
-         */
-        function formatDateInput(e) {
-            let input = e.target;
-            input.value = input.value.replace(/\D/g, '')
-                                     .replace(/(\d{2})(\d)/, '$1/$2')
-                                     .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3')
-                                     .replace(/(\d{2}\/\d{2}\/\d{4}).*/, '$1');
-        }
-        
-        /**
-         * Updates the visitor counter on the page.
-         */
-        function updateVisitorCounter() {
-            let count = localStorage.getItem('visitorCount');
-            count = count ? parseInt(count, 10) + 1 : 1;
-            localStorage.setItem('visitorCount', count);
-            if(visitorCounterDiv) visitorCounterDiv.textContent = `${count}`;
+                const printStatusElem = type === 'mh_only' ? this.elements.status.mhPrint : this.elements.status.print;
+
+                try {
+                    const mhData = this.collectMentalHealthData();
+
+                    if (type === 'mh_only' && !mhData.isStarted) {
+                        Utils.showStatus(printStatusElem, 'Nenhum dado da Ficha de Saúde Mental para imprimir.', 'error');
+                        return;
+                    }
+
+                    const mainData = this.collectMainReportData();
+                    const doc = await PdfGenerator.generate(mainData, mhData, this.logoBase64, type === 'mh_only');
+                    
+                    const fileName = type === 'mh_only' ? 'relatorio_saude_mental.pdf' : 'relatorio_risco_familia.pdf';
+                    doc.save(fileName);
+                    Utils.showStatus(printStatusElem, 'Relatório PDF gerado com sucesso!', 'success');
+
+                } catch (error) {
+                    console.error(`Error generating PDF (${type}):`, error);
+                    Utils.showStatus(printStatusElem, `Erro ao gerar PDF: ${error.message}. Verifique o console para detalhes.`, 'error');
+                }
+            }
+
+            clearAllForms() {
+                for(const key in this.elements.mainInfo) {
+                    this.elements.mainInfo[key].value = '';
+                }
+                this.populateRiskTable(); // Re-populates and resets table
+                this.updateTotalScore(); 
+                this.clearMentalHealthForm(false);
+                if (this.elements.status.print) this.elements.status.print.style.display = 'none';
+                Utils.showStatus(this.elements.status.global, 'Todos os formulários foram limpos!', 'success');
+            }
+
+            clearMentalHealthForm(showMsg = true) {
+                const { forms, status } = this.elements;
+                if (forms.mentalHealth) forms.mentalHealth.reset();
+                if (status.mhForm) status.mhForm.style.display = 'none';
+                if (status.mhPrint) status.mhPrint.style.display = 'none';
+                if (showMsg) Utils.showStatus(status.mhForm || status.global, 'Ficha de Saúde Mental limpa!', 'success');
+            }
+
+            // REMOVED updateVisitorCounter function
         }
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
-            popularTabelaEscala(); 
-            atualizarEscoreTotal(); 
-            setupModalListeners();
-            updateVisitorCounter();
-            
-            document.getElementById('mh_data_nascimento')?.addEventListener('input', formatDateInput);
-            document.getElementById('mh_data_registro')?.addEventListener('input', formatDateInput);
-            
-            if (confirmClearModal) confirmClearModal.style.display = 'none';
+            const app = new RiskAssessmentApp(AppConfig);
+            app.init();
         });
 
     </script>
