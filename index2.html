@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escala de Risco Familiar Coelho-Savassi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jsPDF library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+        .modal {
+            display: none; position: fixed; z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: #ffffff; margin: auto; padding: 24px;
+            border-radius: 8px; width: 90%; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-height: 90vh; /* Limit modal height */
+            overflow-y: auto; /* Allow scrolling within modal */
+        }
+        .modal-content-sm {
+             max-width: 500px; /* Smaller modal for confirmations */
+        }
+        .modal-content-lg {
+            max-width: 768px; /* md:max-w-3xl */
+        }
+        .close-button {
+            color: #aaa; float: right; font-size: 28px;
+            font-weight: bold; cursor: pointer;
+        }
+        .close-button:hover, .close-button:focus {
+            color: black; text-decoration: none;
+        }
+        .table th, .table td {
+            padding: 8px; 
+            border: 1px solid #e5e7eb; 
+            vertical-align: middle;
+            font-size: 0.875rem; 
+        }
+        .table th {
+            background-color: #f9fafb; 
+            font-weight: 600; 
+        }
+        .sentinel-description {
+            display: block;
+            font-size: 0.75rem; /* text-xs */
+            color: #6b7280; /* gray-500 */
+            font-weight: 400;
+            margin-top: 4px;
+        }
+        input[type="number"], input[type="text"], select, textarea {
+            border: 1px solid #d1d5db; 
+            border-radius: 0.375rem; 
+            padding: 0.4rem 0.6rem; 
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 0.8rem; 
+        }
+        .multiplicador-input {
+            width: 60px !important; 
+            padding: 0.4rem;
+        }
+        .radio-group {
+            display: flex;
+            gap: 10px; /* Space between radio buttons */
+            align-items: center;
+        }
+        .radio-group label {
+            margin-left: 4px; 
+            font-size: 0.8rem;
+        }
+        .radio-group input[type="radio"] {
+            width: auto; 
+            accent-color: #3b82f6; 
+        }
+        .radio-group input[type="radio"].custom-radio-lg {
+            width: 1.15rem; /* Tailwind w-5 approx */
+            height: 1.15rem; /* Tailwind h-5 approx */
+        }
+        .radio-group label.custom-label-lg {
+            font-size: 0.9rem; /* Tailwind text-sm approx */
+            margin-left: 6px; 
+        }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
+            outline: 2px solid transparent; outline-offset: 2px;
+            border-color: #2563eb; box-shadow: 0 0 0 2px #3b82f6;
+        }
+        .btn {
+            padding: 0.6rem 1.2rem; 
+            border-radius: 0.375rem;
+            font-weight: 500; cursor: pointer; transition: background-color 0.2s;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; 
+        }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-primary:disabled { background-color: #9ca3af; cursor: not-allowed; }
+        .btn-secondary { background-color: #6b7280; color: white; }
+        .btn-secondary:hover { background-color: #4b5563; }
+        .btn-danger { background-color: #ef4444; color: white; } /* Red for clear/delete */
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-success { background-color: #10b981; color: white; } /* Green for print */
+        .btn-success:hover { background-color: #059669; }
+        .btn-warning { background-color: #f59e0b; color: white; } /* Amber for clear specific form */
+        .btn-warning:hover { background-color: #d97706; }
+        .custom-checkbox { margin-right: 0.5rem; }
+        .status-message {
+            padding: 0.5rem 1rem; margin-top: 0.5rem;
+            border-radius: 0.375rem; font-size: 0.875rem; text-align: center;
+        }
+        .status-success { background-color: #d1fae5; color: #065f46; }
+        .status-error { background-color: #fee2e2; color: #991b1b; }
+        #row_densidade_domiciliar label {
+            font-size: 0.75rem; 
+        }
+        #row_densidade_domiciliar input[type="number"] {
+             width: 50px !important; 
+             padding: 0.3rem;
+        }
+        .fixed-multiplier-text {
+            font-size: 0.8rem;
+            color: #4b5563; 
+            text-align: center;
+        }
+        .form-label {
+            display: block; 
+            margin-bottom: 0.25rem; /* Equivalent to mb-1 */
+        }
+        .header-logo {
+            max-width: 200px;
+            max-height: 70px; 
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem; 
+        }
+        #visitorCounter {
+            position: fixed;
+            bottom: 10px;
+            right: 15px;
+            font-size: 0.75rem; /* text-xs */
+            color: #9ca3af; /* gray-400 */
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+
+    <div class="container mx-auto max-w-6xl"> 
+        <header class="mb-6 text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Escala de Risco Familiar de Coelho-Savassi</h1>
+            <!-- Logótipo Adicionado Aqui -->
+            <div class="flex justify-center my-3">
+                 <img id="logoImage" src="https://placehold.co/300x80/02407e/FFFFFF?text=SESAU+AQUIDAUANA&font=raleway" alt="Logótipo da Instituição" class="header-logo" crossorigin="anonymous">
+            </div>
+            <p class="text-gray-600 mt-1">Desenvolvido por: Enf. Daniel F. Marmol - Coord. Saúde Digital</p>
+            <p class="text-gray-500 text-sm">danielfimafi@gmail.com</p>
+            <div id="globalStatusMessage" class="status-message" style="display: none;"></div>
+        </header>
+
+        <section class="bg-white p-4 rounded-lg shadow-lg mb-8"> 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+                <div>
+                    <label for="responsavel_familiar" class="form-label text-sm font-medium text-gray-700">Responsável familiar:</label>
+                    <input type="text" id="responsavel_familiar" name="responsavel_familiar">
+                </div>
+                <div>
+                    <label for="esf_responsavel" class="form-label text-sm font-medium text-gray-700">ESF responsável:</label>
+                    <input type="text" id="esf_responsavel" name="esf_responsavel">
+                </div>
+                <div>
+                    <label for="micro_area" class="form-label text-sm font-medium text-gray-700">Micro Área:</label>
+                    <input type="text" id="micro_area" name="micro_area">
+                </div>
+                <div>
+                    <label for="responsavel_classificacao" class="form-label text-sm font-medium text-gray-700">Responsável pela classificação:</label>
+                    <input type="text" id="responsavel_classificacao" name="responsavel_classificacao">
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold text-gray-700 mb-3 border-t pt-4">Sentinelas de Risco</h2> 
+            <table class="w-full table-auto border-collapse table" id="escalaRiscoTable">
+                <thead>
+                    <tr class="text-left text-gray-700">
+                        <th>Sentinela de Risco</th>
+                        <th class="text-center">Presente? (Sim/Não) / Valores</th>
+                        <th class="text-center">Multiplicador</th>
+                        <th class="text-center">Pontos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Itens da Escala serão inseridos aqui pelo JavaScript -->
+                </tbody>
+                <tfoot>
+                    <tr class="bg-gray-100">
+                        <td colspan="3" class="text-right font-bold text-lg">Escore Total de Risco:</td>
+                        <td id="escore_total" class="font-bold text-lg text-center">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+             <p class="mt-3 text-xs text-gray-500"> 
+                 Sobre o Multiplicador: 1 (padrão): Situação típica. 0,5: Leve/parcial. 1,5: Moderadamente agravada. 2: Severamente agravada.
+            </p>
+        </section>
+        
+        <section class="mb-8 text-center">
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
+                <button id="printReportButton" class="btn btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2" viewBox="0 0 16 16">
+                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    </svg>
+                    Imprimir Relatório Completo
+                </button>
+                <button id="clearAllFormsButton" class="btn btn-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eraser-fill mr-2" viewBox="0 0 16 16">
+                        <path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z"/>
+                    </svg>
+                    Limpar Todos Formulários
+                </button>
+            </div>
+            <div id="printStatus" class="status-message" style="display: none;"></div>
+            <button id="openMentalHealthForm" class="btn btn-primary mt-4">
+                Deseja preencher ficha de SINAIS DE ALERTA EM SAÚDE MENTAL?
+            </button>
+        </section>
+
+        <!-- Modal para Ficha de Saúde Mental -->
+        <div id="mentalHealthModal" class="modal" style="display: none;">
+            <div class="modal-content modal-content-lg">
+                <span class="close-button" id="closeMentalHealthModalButton">&times;</span>
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">FICHA COMPLEMENTAR - SINAIS DE ALERTA PARA O CUIDADO EM SAÚDE MENTAL</h2>
+                <form id="mentalHealthForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div><label for="mh_nome_completo" class="form-label text-sm font-medium text-gray-700">Nome completo:</label><input type="text" id="mh_nome_completo" name="mh_nome_completo"></div>
+                        <div><label for="mh_data_nascimento" class="form-label text-sm font-medium text-gray-700">Data de Nascimento:</label><input type="text" id="mh_data_nascimento" name="mh_data_nascimento" placeholder="DD/MM/AAAA" maxlength="10"></div>
+                        <div><label for="mh_nome_social" class="form-label text-sm font-medium text-gray-700">Nome Social:</label><input type="text" id="mh_nome_social" name="mh_nome_social"></div>
+                        <div><label for="mh_sexo" class="form-label text-sm font-medium text-gray-700">Sexo:</label><select id="mh_sexo" name="mh_sexo"><option value="">Selecione...</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="O">Outro</option></select></div>
+                        <div><label for="mh_microarea_mh" class="form-label text-sm font-medium text-gray-700">Microárea (Saúde Mental):</label><input type="text" id="mh_microarea_mh" name="mh_microarea_mh"></div>
+                    </div>
+                    <hr class="my-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Questões Norteadoras</h3>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><p class="font-medium text-gray-700 mb-2">1. Existe comprometimento funcional, tais como:</p><div class="ml-4"><div class="mb-2"><label for="q1a" class="flex items-center"><input type="checkbox" id="q1a" name="q1a" class="custom-checkbox">a. O usuário deixou de ir à escola?</label></div><div class="mb-2"><label for="q1b" class="flex items-center"><input type="checkbox" id="q1b" name="q1b" class="custom-checkbox">b. O usuário deixou de ir ao trabalho?</label></div><div><label for="q1c" class="flex items-center"><input type="checkbox" id="q1c" name="q1c" class="custom-checkbox">c. O usuário deixou de fazer tarefas domésticas que fazia com naturalidade antes?</label></div></div></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q2_check" class="font-medium text-gray-700 flex items-start"><input type="checkbox" id="q2_check" name="q2_check" class="custom-checkbox mt-1">2. Palavras como "mais nervoso", "está surtado", "enlouqueceu", "sem forças", são relacionadas ao usuário?</label><textarea id="q2_details" name="q2_details" rows="2" placeholder="Se sim, quais?" class="mt-2 w-full"></textarea></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q3" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q3" name="q3" class="custom-checkbox">3. O usuário já tentou se machucar ou se matar?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q4" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q4" name="q4" class="custom-checkbox">4. Existe relato de agressividade do usuário contra outras pessoas?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q5" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q5" name="q5" class="custom-checkbox">5. Há um consumo de substâncias lícitas ou ilícitas que esteja prejudicando a sua rotina?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q6" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q6" name="q6" class="custom-checkbox">6. Há relato de dificuldade escolar?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q7" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q7" name="q7" class="custom-checkbox">7. Houve alguma mudança no comportamento, ou seja, o usuário está se comportando de uma forma diferente do habitual?</label></div>
+                    <div class="mb-4 p-3 border border-gray-200 rounded-md"><label for="q8" class="font-medium text-gray-700 flex items-center"><input type="checkbox" id="q8" name="q8" class="custom-checkbox">8. O usuário está falando coisas sem sentido, ou está confuso?</label></div>
+                    <hr class="my-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div><label for="mh_registrado_por" class="form-label text-sm font-medium text-gray-700">Registrado por:</label><input type="text" id="mh_registrado_por" name="mh_registrado_por"></div>
+                        <div><label for="mh_data_registro" class="form-label text-sm font-medium text-gray-700">Data do Registro:</label><input type="text" id="mh_data_registro" name="mh_data_registro" placeholder="DD/MM/AAAA" maxlength="10"></div>
+                    </div>
+                    
+                    <div class="mt-8 flex flex-wrap justify-end items-center gap-3">
+                         <button type="button" id="printMentalHealthReportButton" class="btn btn-success">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill mr-2" viewBox="0 0 16 16"><path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/><path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/></svg>
+                             Imprimir Ficha SM
+                         </button>
+                         <button type="button" id="clearMentalHealthFormButton" class="btn btn-warning">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eraser mr-2" viewBox="0 0 16 16"><path d="M8.086 1.012a.5.5 0 0 1 .633.065l4 4a.5.5 0 0 1 0 .708l-5.5 5.5a.5.5 0 0 1-.708 0L1.512 6.286a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .633-.065zM4.293 2.293 2.146 4.44l1.06 1.06L5.354 3.354zm8.56.56L10.707 5l1.061 1.06L13.914 4zM3.586 5.5 2.5 6.586l4.293 4.293L7.854 9.8l-4.268-4.3z"/></svg>
+                             Limpar Ficha SM
+                         </button>
+                        <button type="button" id="cancelMentalHealthFormButton" class="btn btn-secondary">Fechar</button>
+                    </div>
+                    <div id="mentalHealthPrintStatus" class="status-message mt-2" style="display: none;"></div>
+                    <div id="mentalHealthFormStatus" class="status-message mt-2" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para Confirmação de Limpeza -->
+        <div id="confirmClearModal" class="modal">
+            <div class="modal-content modal-content-sm">
+                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Confirmar Ação</h2>
+                 <p class="text-gray-600 mb-6">Tem certeza de que deseja limpar todos os dados dos formulários? Esta ação não pode ser desfeita.</p>
+                 <div class="flex justify-end gap-3">
+                     <button id="cancelClearButton" class="btn btn-secondary">Cancelar</button>
+                     <button id="confirmClearButton" class="btn btn-danger">Sim, Limpar Tudo</button>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="visitorCounter"></div>
+
+    <script type="module">
+        // --- Configuration ---
+        const AppConfig = {
+            riskScaleItems: [
+                { id: "acamado", nome: "Acamado", descricao: "Toda pessoa restrita ao domicílio, por falta de habilidade e/ou incapacidade de locomoção por si só a qualquer unidade de saúde.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "deficiencia_fisica", nome: "Deficiência física", descricao: "Qualquer condição que limite a mobilidade ou a capacidade física do indivíduo, exigindo cuidados ou suporte especial.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "deficiencia_mental", nome: "Deficiência mental", descricao: "Qualquer condição que afete o desenvolvimento intelectual ou a saúde mental, necessitando de suporte contínuo.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "baixas_condicoes_saneamento", nome: "Baixas condições de saneamento", descricao: "Domicílio sem acesso à rede de esgoto ou fossa séptica, e/ou sem coleta de lixo regular.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "desnutricao_grave", nome: "Desnutrição grave", descricao: "Indivíduo com diagnóstico clínico ou indicadores antropométricos (peso/altura) de desnutrição grave.", escoreBase: 3, tipo: "sim_nao" },
+                { id: "drogadicao", nome: "Drogadição", descricao: "Uso abusivo de substâncias psicoativas por um ou mais membros, com impacto negativo na dinâmica familiar.", escoreBase: 2, tipo: "sim_nao" },
+                { id: "desemprego", nome: "Desemprego", descricao: "Principal provedor da família ou múltiplos membros adultos sem emprego formal ou fonte de renda estável.", escoreBase: 2, tipo: "sim_nao" },
+                { id: "analfabetismo", nome: "Analfabetismo", descricao: "Membros adultos da família que não sabem ler ou escrever, dificultando o acesso à informação e serviços.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "menor_6_meses", nome: "Menor de 6 meses", descricao: "Presença de criança com menos de 6 meses no domicílio, período de maior vulnerabilidade.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "maior_70_anos", nome: "Maior de 70 anos", descricao: "Presença de idoso com 70 anos ou mais, que pode apresentar maior fragilidade e necessidade de acompanhamento.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "hipertensao", nome: "Hipertensão arterial sistêmica", descricao: "Presença de membro(s) com diagnóstico de HAS, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "diabetes", nome: "Diabetes Mellitus", descricao: "Presença de membro(s) com diagnóstico de DM, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
+                { id: "densidade_domiciliar", nome: "Relação morador/cômodo", descricao: "Relação entre o número de moradores e o de cômodos da casa (excluindo banheiros e áreas de serviço).", tipo: "densidade", fixedMultiplier: 1 } 
+            ],
+            selectors: {
+                riskTableBody: '#escalaRiscoTable tbody',
+                totalScoreOutput: '#escore_total',
+                mainInfo: {
+                    respFamiliar: '#responsavel_familiar',
+                    esf: '#esf_responsavel',
+                    microArea: '#micro_area',
+                    respClass: '#responsavel_classificacao',
+                },
+                modals: {
+                    mentalHealth: '#mentalHealthModal',
+                    confirmClear: '#confirmClearModal',
+                },
+                buttons: {
+                    openMhModal: '#openMentalHealthForm',
+                    closeMhModal: '#closeMentalHealthModalButton',
+                    cancelMhModal: '#cancelMentalHealthFormButton',
+                    clearAll: '#clearAllFormsButton',
+                    printMain: '#printReportButton',
+                    printMh: '#printMentalHealthReportButton',
+                    clearMh: '#clearMentalHealthFormButton',
+                    cancelClear: '#cancelClearButton',
+                    confirmClear: '#confirmClearButton',
+                },
+                forms: {
+                    mentalHealth: '#mentalHealthForm',
+                },
+                status: {
+                    global: '#globalStatusMessage',
+                    print: '#printStatus',
+                    mhForm: '#mentalHealthFormStatus',
+                    mhPrint: '#mentalHealthPrintStatus',
+                },
+                visitorCounter: '#visitorCounter',
+                dateInputs: '[placeholder="DD/MM/AAAA"]',
+                logoImage: '#logoImage',
+            }
+        };
+
+        // --- Utility Functions ---
+        const Utils = {
+            $: (selector) => document.querySelector(selector),
+            $$: (selector) => document.querySelectorAll(selector),
+            
+            showStatus(element, message, type = 'success') {
+                if (!element) return;
+                element.textContent = message;
+                element.className = `status-message status-${type}`; 
+                element.style.display = 'block';
+                setTimeout(() => { element.style.display = 'none'; }, 4000);
+            },
+
+            formatDateInput(e) {
+                let input = e.target;
+                input.value = input.value
+                    .replace(/\D/g, '')
+                    .replace(/(\d{2})(\d)/, '$1/$2')
+                    .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3')
+                    .replace(/(\d{2}\/\d{2}\/\d{4}).*/, '$1');
+            },
+
+            getImageBase64(imageElement) {
+                return new Promise((resolve, reject) => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.onload = () => {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.onerror = (err) => reject('Could not load image for PDF');
+                    img.src = imageElement.src;
+                });
+            }
+        };
+
+        // --- PDF Generation Module ---
+        const PdfGenerator = {
+            async generate(mainData, mhData, logoBase64, isMhOnly = false) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const pageMargin = 10;
+                const indent = 15;
+                const lineSpacing = 6;
+                const sectionSpacing = 10;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                
+                let yPos = await this.addHeader(doc, logoBase64, pageWidth);
+
+                if (isMhOnly) {
+                    yPos = this.addMentalHealthSection(doc, mhData, yPos, { pageMargin, indent, lineSpacing, sectionSpacing, pageWidth }, true);
+                } else {
+                    yPos = this.addMainReportSection(doc, mainData, yPos, { pageMargin, indent, lineSpacing, sectionSpacing, pageWidth });
+                    yPos = this.addMentalHealthSection(doc, mhData, yPos, { pageMargin, indent, lineSpacing, sectionSpacing, pageWidth });
+                }
+
+                this.addFooter(doc, pageMargin, pageWidth);
+                return doc;
+            },
+
+            addText(doc, text, x, y, options = {}) {
+                const { fontSize = 10, style = 'normal', align = 'left', color = '#000000', maxWidth } = options;
+                const pageMargin = 10;
+                const usableWidth = doc.internal.pageSize.getWidth() - (2 * pageMargin);
+                
+                doc.setFontSize(fontSize);
+                doc.setFont('helvetica', style);
+                doc.setTextColor(color);
+                
+                const textLines = doc.splitTextToSize(text, maxWidth || usableWidth);
+                const lineHeight = fontSize * 1.15 / doc.internal.scaleFactor;
+                const textBlockHeight = textLines.length * lineHeight;
+
+                if (y + textBlockHeight > doc.internal.pageSize.getHeight() - pageMargin) { 
+                    doc.addPage();
+                    y = pageMargin; 
+                }
+                
+                doc.text(textLines, x, y, { align: align === 'left' ? undefined : align });
+                return y + textBlockHeight + (lineHeight * 0.2); 
+            },
+            
+            async addHeader(doc, logoBase64, pageWidth) {
+                let yPos = 15;
+                if (logoBase64) {
+                    try {
+                        const logoWidth = 40; const logoHeight = 15;
+                        const logoX = (pageWidth - logoWidth) / 2;
+                        doc.addImage(logoBase64, 'PNG', logoX, yPos - 8, logoWidth, logoHeight);
+                        yPos += logoHeight;
+                    } catch (e) { console.error("Failed to add logo to PDF:", e); }
+                }
+                return yPos;
+            },
+
+            addMainReportSection(doc, data, yPos, layout) {
+                yPos = this.addText(doc, "Relatório de Avaliação de Risco Familiar", layout.pageWidth / 2, yPos, { fontSize: 16, style: 'bold', align: 'center' });
+                yPos += layout.lineSpacing / 2;
+                yPos = this.addText(doc, `Data: ${new Date().toLocaleString('pt-BR')}`, layout.pageWidth / 2, yPos, { fontSize: 8, style: 'italic', align: 'center' });
+                yPos += layout.sectionSpacing;
+
+                yPos = this.addText(doc, `Responsável Familiar: ${data.mainInfo.respFamiliar || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos = this.addText(doc, `ESF Responsável: ${data.mainInfo.esf || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos = this.addText(doc, `Micro Área: ${data.mainInfo.microArea || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos = this.addText(doc, `Responsável pela Classificação: ${data.mainInfo.respClass || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos += layout.lineSpacing; 
+
+                data.riskItems.forEach(item => {
+                    yPos = this.addText(doc, `• ${item.nome}`, layout.indent, yPos, {fontSize: 10, style: 'bold'});
+                    yPos = this.addText(doc, item.descricao, layout.indent + 5, yPos, {fontSize: 8, style: 'italic', color: '#555555'});
+                    const details = `Detalhes: ${item.details}, Pontos: ${item.points}`;
+                    yPos = this.addText(doc, details, layout.indent + 5, yPos, {fontSize: 9});
+                    yPos += 2;
+                });
+                
+                yPos += layout.lineSpacing * 0.5;
+                yPos = this.addText(doc, `Escore Total de Risco: ${data.totalScore}`, layout.pageMargin, yPos, { fontSize: 12, style: 'bold' });
+                yPos += layout.sectionSpacing;
+                
+                return yPos;
+            },
+
+            addMentalHealthSection(doc, data, yPos, layout, forceTitle = false) {
+                 if (!data.isStarted) return yPos;
+
+                if (yPos + 60 > doc.internal.pageSize.getHeight() - layout.pageMargin) { doc.addPage(); yPos = layout.pageMargin; }
+
+                yPos = this.addText(doc, "Ficha de Sinais de Alerta em Saúde Mental", forceTitle ? layout.pageWidth / 2 : layout.pageMargin, yPos, { fontSize: 14, style: 'bold', align: forceTitle ? 'center' : 'left' });
+                yPos += layout.lineSpacing;
+                
+                const mhDetails = Object.entries(data.details).map(([key, val]) => `${key}: ${val || 'N/P'}`).join(' | ');
+                yPos = this.addText(doc, mhDetails, layout.indent, yPos, {fontSize: 9});
+                yPos += layout.lineSpacing;
+                
+                yPos = this.addText(doc, "Questões Norteadoras:", layout.indent, yPos, { fontSize: 10, style: 'bold' });
+                data.questions.forEach(q => {
+                    yPos = this.addText(doc, `• ${q.text}${q.details ? `: ${q.details}`: ''}`, layout.indent + 5, yPos, {fontSize: 9});
+                });
+                yPos += layout.lineSpacing;
+
+                yPos = this.addText(doc, `Registrado por: ${data.registeredBy || 'N/P'} | Data: ${data.registrationDate || 'N/P'}`, layout.indent, yPos, {fontSize: 9});
+                yPos += layout.sectionSpacing; 
+                
+                return yPos;
+            },
+            
+            addFooter(doc, pageMargin, pageWidth) {
+                 const finalPageNum = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= finalPageNum; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8); doc.setTextColor(150); 
+                    doc.text(`Página ${i} de ${finalPageNum}`, pageWidth - pageMargin, doc.internal.pageSize.getHeight() - 10, {align: 'right'});
+                }
+            }
+        };
+
+        // --- Main Application Logic ---
+        class RiskAssessmentApp {
+            constructor(config) {
+                this.config = config;
+                this.elements = this.getElements();
+                this.pdfReady = false;
+                this.logoBase64 = null;
+            }
+
+            init() {
+                this.checkDependencies();
+                this.populateRiskTable();
+                this.updateTotalScore();
+                this.setupEventListeners();
+                this.updateVisitorCounter();
+            }
+
+            checkDependencies() {
+                if (typeof window.jspdf === 'undefined') {
+                    this.pdfReady = false;
+                    Utils.showStatus(this.elements.status.global, 'Biblioteca de PDF (jsPDF) não pode ser carregada. A impressão está desativada.', 'error');
+                    this.elements.buttons.printMain.disabled = true;
+                    this.elements.buttons.printMh.disabled = true;
+                } else {
+                    this.pdfReady = true;
+                    Utils.getImageBase64(this.elements.logoImage)
+                        .then(base64 => this.logoBase64 = base64)
+                        .catch(err => Utils.showStatus(this.elements.status.print, 'Aviso: O logo não pôde ser carregado para o PDF.', 'error'));
+                }
+            }
+
+            getElements() {
+                const elements = {};
+                for (const key in this.config.selectors) {
+                    const selector = this.config.selectors[key];
+                    if (typeof selector === 'string') {
+                        elements[key] = Utils.$(selector);
+                    } else {
+                        elements[key] = {};
+                        for(const subKey in selector) {
+                            elements[key][subKey] = Utils.$(selector[subKey]);
+                        }
+                    }
+                }
+                return elements;
+            }
+
+            populateRiskTable() {
+                const tableBody = this.elements.riskTableBody;
+                if (!tableBody) return;
+                tableBody.innerHTML = ''; 
+                this.config.riskScaleItems.forEach(item => {
+                    const row = tableBody.insertRow();
+                    row.id = `row_${item.id}`;
+                    
+                    row.insertCell().innerHTML = `
+                        <span class="font-medium text-gray-800">${item.nome}</span>
+                        <small class="sentinel-description">${item.descricao}</small>`;
+
+                    const inputCell = row.insertCell();
+                    inputCell.classList.add("align-middle", "text-center");
+                    if (item.tipo === "sim_nao") {
+                        inputCell.innerHTML = `
+                            <div class="radio-group justify-center">
+                                <input type="radio" id="${item.id}_sim" name="radio_${item.id}" value="${item.escoreBase}" class="custom-radio-lg">
+                                <label for="${item.id}_sim" class="custom-label-lg">Sim</label>
+                                <input type="radio" id="${item.id}_nao" name="radio_${item.id}" value="0" class="custom-radio-lg" checked>
+                                <label for="${item.id}_nao" class="custom-label-lg">Não</label>
+                            </div>`;
+                    } else if (item.tipo === "densidade") {
+                        inputCell.innerHTML = `
+                            <div class="flex flex-col sm:flex-row gap-2 items-center justify-center">
+                                <div class="flex items-center gap-1">
+                                    <label for="num_moradores" class="text-xs whitespace-nowrap">Moradores:</label>
+                                    <input type="number" id="num_moradores" min="0" class="p-1 text-sm">
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <label for="num_comodos" class="text-xs whitespace-nowrap">Cômodos:</label>
+                                    <input type="number" id="num_comodos" min="1" value="1" class="p-1 text-sm">
+                                </div>
+                            </div>`;
+                    }
+                    
+                    const multiplierCell = row.insertCell();
+                    multiplierCell.classList.add("text-center", "align-middle");
+                    if (item.fixedMultiplier !== undefined) {
+                        multiplierCell.innerHTML = `<span class="fixed-multiplier-text">${item.fixedMultiplier}</span>`;
+                    } else {
+                        multiplierCell.innerHTML = `<input type="number" id="${item.id}_multiplicador" value="1" min="0" step="0.5" class="multiplicador-input mx-auto">`;
+                    }
+                    
+                    const pointsCell = row.insertCell();
+                    pointsCell.id = `${item.id}_pontos`;
+                    pointsCell.textContent = "0.00";
+                    pointsCell.classList.add('font-semibold', 'text-center', "align-middle");
+                });
+
+                tableBody.querySelectorAll('input').forEach(input => {
+                    input.addEventListener('change', () => this.updateTotalScore());
+                    input.addEventListener('input', () => this.updateTotalScore());
+                });
+            }
+
+            updateTotalScore() {
+                let totalPontos = 0;
+                this.config.riskScaleItems.forEach(item => {
+                    let multiplicador = 1; 
+                    if (item.fixedMultiplier !== undefined) {
+                        multiplicador = item.fixedMultiplier;
+                    } else {
+                        const multiplicadorInput = Utils.$(`#${item.id}_multiplicador`);
+                        multiplicador = parseFloat(multiplicadorInput?.value) || 0; 
+                    }
+                    
+                    let pontosItem = 0;
+                    if (item.tipo === "sim_nao") {
+                        const radioSim = Utils.$(`#${item.id}_sim`);
+                        if (radioSim && radioSim.checked) {
+                            pontosItem = parseFloat(radioSim.value) * multiplicador;
+                        }
+                    } else if (item.tipo === "densidade") {
+                        const moradores = parseInt(Utils.$('#num_moradores')?.value) || 0;
+                        const comodos = parseInt(Utils.$('#num_comodos')?.value) || 1; 
+                        let basePontosDensidade = 0;
+                        if (moradores > 0 && comodos > 0) { 
+                            const relacao = moradores / comodos;
+                            if (relacao > 1) basePontosDensidade = 3;
+                            else if (relacao === 1) basePontosDensidade = 2;
+                        }
+                        pontosItem = basePontosDensidade * multiplicador; 
+                    }
+                    
+                    const pontosOutput = Utils.$(`#${item.id}_pontos`);
+                    if (pontosOutput) pontosOutput.textContent = pontosItem.toFixed(2);
+                    totalPontos += pontosItem;
+                });
+                
+                if (this.elements.totalScoreOutput) this.elements.totalScoreOutput.textContent = totalPontos.toFixed(2);
+            }
+            
+            setupEventListeners() {
+                const { buttons, modals } = this.elements;
+                buttons.openMhModal.onclick = () => modals.mentalHealth.style.display = "flex";
+                buttons.closeMhModal.onclick = () => modals.mentalHealth.style.display = "none";
+                buttons.cancelMhModal.onclick = () => modals.mentalHealth.style.display = "none";
+                buttons.clearAll.onclick = () => modals.confirmClear.style.display = 'flex';
+                buttons.cancelClear.onclick = () => modals.confirmClear.style.display = 'none';
+                buttons.confirmClear.onclick = () => {
+                    modals.confirmClear.style.display = 'none';
+                    this.clearAllForms();
+                };
+                
+                buttons.printMain.onclick = () => this.handlePrint('main');
+                buttons.printMh.onclick = () => this.handlePrint('mh_only');
+                buttons.clearMh.onclick = () => this.clearMentalHealthForm(true);
+
+                window.onclick = (event) => {
+                    if (event.target == modals.mentalHealth) modals.mentalHealth.style.display = "none";
+                    if (event.target == modals.confirmClear) modals.confirmClear.style.display = "none";
+                };
+
+                Utils.$$(this.config.selectors.dateInputs).forEach(input => {
+                    input.addEventListener('input', Utils.formatDateInput);
+                });
+            }
+
+            collectMainReportData() {
+                const mainInfo = {};
+                for(const key in this.elements.mainInfo) {
+                    mainInfo[key] = this.elements.mainInfo[key]?.value;
+                }
+
+                const riskItems = [];
+                this.config.riskScaleItems.forEach(item => {
+                    const isPresent = item.tipo === 'sim_nao' ? Utils.$(`#${item.id}_sim`).checked : false;
+                    const points = Utils.$(`#${item.id}_pontos`)?.textContent;
+
+                    if((isPresent || item.tipo === 'densidade') && parseFloat(points) > 0) {
+                        let details = '';
+                         if (item.tipo === "sim_nao") {
+                            details = `Presente: Sim, Multiplicador: ${Utils.$(`#${item.id}_multiplicador`)?.value || "1"}`;
+                         } else {
+                            details = `Moradores: ${Utils.$('#num_moradores')?.value || "0"}, Cômodos: ${Utils.$('#num_comodos')?.value || "1"}`;
+                         }
+                        riskItems.push({
+                            nome: item.nome,
+                            descricao: item.descricao,
+                            details: details,
+                            points: points || "0.00"
+                        });
+                    }
+                });
+
+                return {
+                    mainInfo,
+                    riskItems,
+                    totalScore: this.elements.totalScoreOutput?.textContent || "0.00"
+                };
+            }
+            
+            collectMentalHealthData() {
+                const form = this.elements.forms.mentalHealth;
+                const getVal = (id) => form.querySelector(`#${id}`)?.value;
+                const getCheck = (id) => form.querySelector(`#${id}`)?.checked;
+                const getSelectText = (id) => {
+                    const sel = form.querySelector(`#${id}`);
+                    return sel?.value ? sel.options[sel.selectedIndex].text : '';
+                }
+
+                const questions = [
+                    { check: getCheck('q1a'), text: 'Comprometimento - Escola' },
+                    { check: getCheck('q1b'), text: 'Comprometimento - Trabalho' },
+                    { check: getCheck('q1c'), text: 'Comprometimento - Tarefas Domésticas' },
+                    { check: getCheck('q2_check'), text: 'Relato de "surto", "nervosismo"', details: getVal('q2_details') },
+                    { check: getCheck('q3'), text: 'Tentou se machucar/matar?' },
+                    { check: getCheck('q4'), text: 'Relato de agressividade?' },
+                    { check: getCheck('q5'), text: 'Uso de substâncias prejudicando rotina?' },
+                    { check: getCheck('q6'), text: 'Dificuldade escolar?' },
+                    { check: getCheck('q7'), text: 'Mudança de comportamento?' },
+                    { check: getCheck('q8'), text: 'Falando coisas sem sentido / confuso?' }
+                ].filter(q => q.check).map(q => ({ text: q.text, details: q.details }));
+
+
+                return {
+                    isStarted: getVal('mh_nome_completo') || getVal('mh_data_nascimento'),
+                    details: {
+                        'Nome': getVal('mh_nome_completo'),
+                        'Data Nasc.': getVal('mh_data_nascimento'),
+                        'Nome Social': getVal('mh_nome_social'),
+                        'Sexo': getSelectText('mh_sexo'),
+                        'Microárea': getVal('mh_microarea_mh')
+                    },
+                    questions,
+                    registeredBy: getVal('mh_registrado_por'),
+                    registrationDate: getVal('mh_data_registro'),
+                }
+            }
+            
+            async handlePrint(type) {
+                if (!this.pdfReady) {
+                    Utils.showStatus(this.elements.status.print, 'Erro: A função de impressão está indisponível.', 'error');
+                    return;
+                }
+
+                const printStatusElem = type === 'mh_only' ? this.elements.status.mhPrint : this.elements.status.print;
+
+                try {
+                    const mhData = this.collectMentalHealthData();
+
+                    if (type === 'mh_only' && !mhData.isStarted) {
+                        Utils.showStatus(printStatusElem, 'Nenhum dado da Ficha de Saúde Mental para imprimir.', 'error');
+                        return;
+                    }
+
+                    const mainData = this.collectMainReportData();
+                    const doc = await PdfGenerator.generate(mainData, mhData, this.logoBase64, type === 'mh_only');
+                    
+                    const fileName = type === 'mh_only' ? 'relatorio_saude_mental.pdf' : 'relatorio_risco_familia.pdf';
+                    doc.save(fileName);
+                    Utils.showStatus(printStatusElem, 'Relatório PDF gerado com sucesso!', 'success');
+
+                } catch (error) {
+                    console.error(`Error generating PDF (${type}):`, error);
+                    Utils.showStatus(printStatusElem, `Erro ao gerar PDF: ${error.message}. Verifique o console para detalhes.`, 'error');
+                }
+            }
+
+            clearAllForms() {
+                for(const key in this.elements.mainInfo) {
+                    this.elements.mainInfo[key].value = '';
+                }
+                this.populateRiskTable(); // Re-populates and resets table
+                this.updateTotalScore(); 
+                this.clearMentalHealthForm(false);
+                if (this.elements.status.print) this.elements.status.print.style.display = 'none';
+                Utils.showStatus(this.elements.status.global, 'Todos os formulários foram limpos!', 'success');
+            }
+
+            clearMentalHealthForm(showMsg = true) {
+                const { forms, status } = this.elements;
+                if (forms.mentalHealth) forms.mentalHealth.reset();
+                if (status.mhForm) status.mhForm.style.display = 'none';
+                if (status.mhPrint) status.mhPrint.style.display = 'none';
+                if (showMsg) Utils.showStatus(status.mhForm || status.global, 'Ficha de Saúde Mental limpa!', 'success');
+            }
+
+            updateVisitorCounter() {
+                let count = localStorage.getItem('visitorCount');
+                count = count ? parseInt(count, 10) + 1 : 1;
+                localStorage.setItem('visitorCount', count);
+                if(this.elements.visitorCounter) this.elements.visitorCounter.textContent = `${count}`;
+            }
+        }
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new RiskAssessmentApp(AppConfig);
+            app.init();
+        });
+
+    </script>
+</body>
+</html>
