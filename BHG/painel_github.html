@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle com Sincronização GitHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Arial', sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 8px;
+        }
+        .tabs-container { margin-bottom: 1rem; border-bottom: 2px solid #cbd5e1; overflow-x: auto; white-space: nowrap; }
+        .tab-button {
+            display: inline-block; padding: 10px 15px; cursor: pointer; border: 1px solid transparent; border-bottom: none;
+            background-color: #e2e8f0; margin-right: 4px; border-radius: 6px 6px 0 0;
+            font-weight: 600; color: #475569; transition: all 0.3s ease;
+        }
+        .tab-button.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        .bed-pane, .control-pane, .github-config-pane { display: none; }
+        .bed-pane.active, .control-pane.active, .github-config-pane.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .table-custom { border-collapse: collapse; width: 100%; max-width: 1400px; margin: auto; table-layout: fixed; }
+        .table-custom th, .table-custom td {
+            border: 1px solid #000; padding: 0; text-align: center; font-size: 12px;
+            height: 30px; box-sizing: border-box; position: relative;
+        }
+        .table-custom th { background-color: #f8fafc; font-weight: bold; white-space: normal; padding: 4px 2px; }
+        .input-icon-wrapper { display: flex; align-items: center; height: 100%; width: 100%; background-color: white; }
+        .table-custom input[type="number"] {
+            width: 100%; height: 100%; border: none; text-align: center; font-size: 12px;
+            padding: 4px 2px; box-sizing: border-box; -moz-appearance: textfield; background-color: transparent;
+        }
+        .table-custom input[type="number"]::-webkit-outer-spin-button,
+        .table-custom input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .col-time { font-weight: bold; color: white; width: 45px; }
+        .col-j { border-left: 2px solid black !important; border-right: 2px solid black !important; }
+        .bg-red-custom { background-color: #ef4444; }
+        .bg-blue-custom { background-color: #3b82f6; }
+        .bg-green-custom-input { background-color: #dcfce7; color: #166534; }
+        .border-r-red-strong { border-right: 2px solid #dc2626; }
+        .border-b-black-strong { border-bottom: 2px solid black; }
+        .total-cell-actions { display: flex; justify-content: space-around; align-items: center; padding: 0 2px; height: 100%; }
+        .footer-button {
+            cursor: pointer; color: white; border: none; border-radius: 4px;
+            width: 20px; height: 20px; font-size: 14px; line-height: 20px;
+            text-align: center; font-weight: bold; transition: background-color 0.2s;
+        }
+        .clear-col-button { background-color: #f87171; }
+        .clear-col-button:hover { background-color: #dc2626; }
+        .repeat-col-button { background-color: #60a5fa; }
+        .repeat-col-button:hover { background-color: #2563eb; }
+        .total-cell-value { font-weight: bold; }
+        .total-cell-clear { cursor: pointer; color: #dc2626; font-weight: bold; }
+        .total-cell-clear:hover { color: #b91c1c; }
+        .summary-input input[type="number"] {
+            font-size: 18px !important; font-weight: bold; border: 2px solid #3b82f6 !important;
+            background-color: #eff6ff !important; text-align: center; padding: 8px !important;
+            border-radius: 6px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .summary-input input[readonly] { background-color: #e5e7eb !important; border-color: #d1d5db !important; color: #4b5563; }
+        .footer-controls { display: flex; justify-content: space-between; align-items: center; padding: 8px; gap: 20px; flex-wrap: wrap; }
+        .completion-status-wrapper { display: flex; align-items: center; font-size: 14px; }
+        .completion-status-wrapper label { margin-right: 8px; font-weight: bold; }
+        .completion-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #3b82f6; }
+        #control-panel-status { list-style: none; padding: 0; margin-top: 20px; }
+        .status-item {
+            font-size: 1.1rem; padding: 10px 15px; border-radius: 5px; margin-bottom: 8px; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .status-item .balance {
+            font-weight: normal; font-size: 1rem; color: #333; background-color: rgba(255, 255, 255, 0.5);
+            padding: 2px 8px; border-radius: 10px;
+        }
+        .status-item.completed { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .status-item.incomplete { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .action-button {
+            color: white; font-weight: bold; padding: 10px 20px;
+            border-radius: 5px; border: none; cursor: pointer; transition: background-color 0.3s;
+        }
+        #clear-all-beds-btn { background-color: #dc2626; }
+        #clear-all-beds-btn:hover { background-color: #b91c1c; }
+        #export-data-btn { background-color: #16a34a; }
+        #export-data-btn:hover { background-color: #15803d; }
+        #import-data-label { background-color: #2563eb; cursor: pointer; }
+        #import-data-label:hover { background-color: #1d4ed8; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-width: 400px; }
+        .modal-content p { font-size: 16px; margin-bottom: 20px; }
+        .modal-content button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 0 10px; }
+        .confirm-btn { background-color: #dc2626; color: white; }
+        .cancel-btn { background-color: #6b7280; color: white; }
+        #sync-status {
+            position: fixed; bottom: 10px; right: 10px; background-color: #6b7280; color: white;
+            padding: 5px 15px; border-radius: 15px; font-size: 12px; font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 1000;
+            opacity: 0; transition: opacity 0.5s;
+        }
+        #sync-status.visible { opacity: 1; }
+        #sync-status.success { background-color: #16a34a; }
+        #sync-status.error { background-color: #dc2626; }
+        #sync-status.syncing { background-color: #2563eb; }
+        
+        /* GitHub Configuration Styles */
+        .github-config-form { max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #374151; }
+        .form-group input { width: 100%; padding: 10px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+        .form-group input:focus { outline: none; border-color: #3b82f6; }
+        .github-status { padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; }
+        .github-status.success { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .github-status.error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .github-status.warning { background-color: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .config-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .config-buttons button { flex: 1; min-width: 120px; }
+    </style>
+</head>
+<body>
+
+    <div id="appContainer" class="bg-white shadow-lg p-4 rounded-lg w-full max-w-7xl mx-auto">
+        <div class="tabs-container"></div>
+        <div class="beds-content"></div>
+    </div>
+
+    <div id="confirm-clear-modal" class="modal-overlay">
+        <div class="modal-content">
+            <p>Tem certeza que deseja apagar TODOS os dados de TODOS os 10 leitos? Esta ação não pode ser desfeita.</p>
+            <button id="confirm-clear-btn" class="confirm-btn">Sim, Apagar Tudo</button>
+            <button id="cancel-clear-btn" class="cancel-btn">Cancelar</button>
+        </div>
+    </div>
+    
+    <div id="confirm-import-modal" class="modal-overlay">
+        <div class="modal-content">
+            <p>Tem certeza que deseja importar este arquivo? Isso irá sobrescrever TODOS os dados salvos.</p>
+            <button id="confirm-import-btn" class="confirm-btn">Sim, Importar</button>
+            <button id="cancel-import-btn" class="cancel-btn">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="sync-status">Sincronizado com GitHub</div>
+
+<script type="module">
+    document.addEventListener('DOMContentLoaded', function() {
+        const appContainer = document.getElementById('appContainer');
+        const tabsContainer = appContainer.querySelector('.tabs-container');
+        const bedsContent = appContainer.querySelector('.beds-content');
+        const confirmClearModal = document.getElementById('confirm-clear-modal');
+        const confirmImportModal = document.getElementById('confirm-import-modal');
+        const statusIndicator = document.getElementById('sync-status');
+        
+        const numberOfBeds = 10;
+        let lastFocusedInput;
+        let debounceTimer;
+        let fileToImport = null;
+        
+        // GitHub Configuration
+        let githubConfig = {
+            username: '',
+            repository: '',
+            token: '',
+            isConfigured: false
+        };
+
+        // Load GitHub configuration from localStorage
+        function loadGitHubConfig() {
+            const saved = localStorage.getItem('github-config');
+            if (saved) {
+                try {
+                    githubConfig = { ...githubConfig, ...JSON.parse(saved) };
+                } catch (e) {
+                    console.error('Erro ao carregar configuração do GitHub:', e);
+                }
+            }
+        }
+
+        // Save GitHub configuration to localStorage
+        function saveGitHubConfig() {
+            localStorage.setItem('github-config', JSON.stringify(githubConfig));
+        }
+
+        // GitHub API functions
+        async function githubApiRequest(endpoint, options = {}) {
+            const url = `https://api.github.com${endpoint}`;
+            const headers = {
+                'Authorization': `Bearer ${githubConfig.token}`,
+                'Accept': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
+                ...options.headers
+            };
+
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+
+            if (!response.ok) {
+                throw new Error(`GitHub API Error: ${response.status} ${response.statusText}`);
+            }
+
+            return response.json();
+        }
+
+        async function getFileFromGitHub(path) {
+            try {
+                return await githubApiRequest(`/repos/${githubConfig.username}/${githubConfig.repository}/contents/${path}`);
+            } catch (error) {
+                if (error.message.includes('404')) {
+                    return null; // File doesn't exist
+                }
+                throw error;
+            }
+        }
+
+        async function saveFileToGitHub(path, content, sha = null) {
+            const body = {
+                message: `Atualizar dados dos leitos - ${new Date().toISOString()}`,
+                content: btoa(unescape(encodeURIComponent(content))) // Encode to base64
+            };
+
+            if (sha) {
+                body.sha = sha;
+            }
+
+            return await githubApiRequest(`/repos/${githubConfig.username}/${githubConfig.repository}/contents/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+        }
+
+        async function testGitHubConnection() {
+            try {
+                await githubApiRequest(`/repos/${githubConfig.username}/${githubConfig.repository}`);
+                return { success: true };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Show sync status
+        function showSyncStatus(message, type = 'success') {
+            statusIndicator.textContent = message;
+            statusIndicator.className = `visible ${type}`;
+            setTimeout(() => {
+                statusIndicator.classList.remove('visible');
+            }, 3000);
+        }
+
+        const generateBedHTML = () => {
+            const hours = [19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6];
+            const cols = [
+                { id: 'b', label: 'INS' }, { id: 'c', label: 'VO' }, { id: 'd', label: 'PLA' }, { id: 'e', label: 'MED' }, { id: 'f', label: 'NOR' }, { id: 'g', label: 'DOR' },
+                { id: 'h', label: 'FEN' }, { id: 'i', label: 'BIC' }, { id: 'j', label: 'BIC' }, { id: 'k', label: 'HEM' }, { id: 'm', label: 'VO SNG' }, { id: 'n', label: 'DIUR' },
+                { id: 'o', label: 'EVA C' }, { id: 'p', label: 'HD' }, { id: 'q', label: 'DRE 1' }, { id: 'r', label: 'DRE 2' }
+            ];
+
+            let headerHTML = `<thead><tr><th class="col-time">A</th>`;
+            cols.slice(0, 10).forEach(c => headerHTML += `<th class="${c.id === 'j' ? 'col-j' : ''} border-r-red-strong">${c.label.replace(' ', '<br>')}</th>`);
+            headerHTML += `<th class="col-time">L</th>`;
+            cols.slice(10).forEach(c => headerHTML += `<th class="border-r-red-strong">${c.label.replace(' ', '<br>')}</th>`);
+            headerHTML += `</tr></thead>`;
+
+            let bodyHTML = '<tbody>';
+            hours.forEach(hour => {
+                const timeCellClass = [19, 20, 21, 22, 23].includes(hour) ? 'bg-red-custom' : 'bg-blue-custom';
+                const lastRowClass = hour === 6 ? 'border-b-black-strong' : '';
+                bodyHTML += `<tr class="data-row ${lastRowClass}"><td class="col-time ${timeCellClass}">${hour === 0 ? 24 : hour}</td>`;
+                cols.slice(0, 10).forEach(c => {
+                    const inputClass = ![19, 20, 21, 22, 23].includes(hour) && c.id === 'b' ? 'bg-green-custom-input' : '';
+                    bodyHTML += `<td class="${c.id === 'j' ? 'col-j' : ''} border-r-red-strong"><div class="input-icon-wrapper ${inputClass}"><input type="number" class="data-input" data-hour="${hour}" data-col="${c.id}" autocomplete="off"></div></td>`;
+                });
+                bodyHTML += `<td class="col-time bg-gray-300 text-black">${hour === 0 ? 24 : hour}</td>`;
+                cols.slice(10).forEach(c => {
+                    bodyHTML += `<td class="border-r-red-strong"><div class="input-icon-wrapper"><input type="number" class="data-input" data-hour="${hour}" data-col="${c.id}" autocomplete="off"></div></td>`;
+                });
+                bodyHTML += '</tr>';
+            });
+            bodyHTML += '</tbody>';
+            
+            let footerHTML = `<tfoot><tr class="border-b-black-strong total-cell"><td class="total-cell-clear" title="Limpar todos os valores deste leito">LIMPAR LEITO</td>`;
+            cols.slice(0, 10).forEach(c => footerHTML += `<td class="${c.id === 'j' ? 'col-j' : ''} border-r-red-strong"><div class="total-cell-actions"><button class="footer-button repeat-col-button" data-col="${c.id}" title="Repetir Valor (/)">⟱</button><span class="total-cell-value total-${c.id}">0</span><button class="footer-button clear-col-button" data-col="${c.id}" title="Limpar Coluna (*)">X</button></div></td>`);
+            footerHTML += `<td></td>`;
+            cols.slice(10).forEach(c => footerHTML += `<td class="border-r-red-strong"><div class="total-cell-actions"><button class="footer-button repeat-col-button" data-col="${c.id}" title="Repetir Valor (/)">⟱</button><span class="total-cell-value total-${c.id}">0</span><button class="footer-button clear-col-button" data-col="${c.id}" title="Limpar Coluna (*)">X</button></div></td>`);
+            footerHTML += '</tr></tfoot>';
+
+            return `
+            <div class="bg-white w-full overflow-x-auto">
+                <table class="table-custom">${headerHTML}${bodyHTML}${footerHTML}</table>
+                <div style="margin-top:24px;" class="p-3 bg-gray-50 rounded-md">
+                    <div class="text-xs text-gray-500 mb-2 text-center">Atalhos: Pressione <strong>/</strong> para repetir valor, <strong>*</strong> para limpar para baixo, <strong>Enter</strong> para descer.</div>
+                    <table class="w-full">
+                        <tbody>
+                            <tr><td class="text-center font-semibold">Manhã</td><td class="text-center font-semibold">TARDE</td><td class="text-center font-semibold">NOITE</td><td class="text-center font-semibold" colspan="2">Balanço 24h</td></tr>
+                            <tr>
+                                <td class="summary-input"><input type="number" class="sumManha data-input" data-col="sumManha"></td>
+                                <td class="summary-input"><input type="number" class="sumTarde data-input" data-col="sumTarde"></td>
+                                <td class="summary-input"><input type="number" class="sumNoite data-input" data-col="sumNoite" readonly></td>
+                                <td class="summary-value text-blue-800 text-center balanco24h" colspan="2" style="font-size: 20px; font-weight: bold;">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="footer-controls">
+                        <div class="completion-status-wrapper"><label>Preenchimento Concluído:</label><input type="checkbox" class="completion-checkbox data-input" data-col="isComplete"></div>
+                    </div>
+                </div>
+            </div>`;
+        };
+
+        const generateGitHubConfigHTML = () => {
+            return `
+            <div class="github-config-form">
+                <h2 class="text-2xl font-bold mb-6 text-center">Configuração do GitHub</h2>
+                
+                <div id="github-status" class="github-status" style="display: none;"></div>
+                
+                <div class="form-group">
+                    <label for="github-username">Nome de Usuário do GitHub:</label>
+                    <input type="text" id="github-username" placeholder="seu-usuario" value="${githubConfig.username}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="github-repository">Nome do Repositório:</label>
+                    <input type="text" id="github-repository" placeholder="meus-dados-leitos" value="${githubConfig.repository}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="github-token">Personal Access Token:</label>
+                    <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" value="${githubConfig.token}">
+                    <small class="text-gray-600 text-sm mt-1 block">
+                        <a href="https://github.com/settings/tokens" target="_blank" class="text-blue-600 hover:underline">
+                            Criar novo token no GitHub
+                        </a> (necessário permissão de "repo")
+                    </small>
+                </div>
+                
+                <div class="config-buttons">
+                    <button id="test-connection-btn" class="action-button" style="background-color: #2563eb;">Testar Conexão</button>
+                    <button id="save-config-btn" class="action-button" style="background-color: #16a34a;">Salvar Configuração</button>
+                    <button id="sync-now-btn" class="action-button" style="background-color: #7c3aed;" ${!githubConfig.isConfigured ? 'disabled' : ''}>Sincronizar Agora</button>
+                </div>
+                
+                <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-bold text-blue-800 mb-2">Como configurar:</h3>
+                    <ol class="text-sm text-blue-700 space-y-1">
+                        <li>1. Crie um repositório no GitHub para armazenar seus dados</li>
+                        <li>2. Gere um Personal Access Token com permissão "repo"</li>
+                        <li>3. Preencha os campos acima e teste a conexão</li>
+                        <li>4. Salve a configuração e sincronize seus dados</li>
+                    </ol>
+                </div>
+            </div>`;
+        };
+        
+        function setupUI() {
+            // Create all bed panes and tabs
+            for (let i = 0; i < numberOfBeds; i++) {
+                const tab = document.createElement('button'); 
+                tab.className = 'tab-button'; 
+                tab.textContent = `Leito ${i + 1}`; 
+                tab.dataset.targetPane = `bed-${i}`; 
+                tabsContainer.appendChild(tab);
+                
+                const pane = document.createElement('div'); 
+                pane.className = 'bed-pane'; 
+                pane.id = `bed-${i}`; 
+                pane.dataset.bedIndex = i; 
+                pane.innerHTML = generateBedHTML(); 
+                bedsContent.appendChild(pane);
+            }
+
+            // Create GitHub config pane and tab
+            const githubTab = document.createElement('button'); 
+            githubTab.className = 'tab-button'; 
+            githubTab.textContent = 'GitHub'; 
+            githubTab.dataset.targetPane = 'github-config-pane'; 
+            tabsContainer.appendChild(githubTab);
+            
+            const githubPane = document.createElement('div'); 
+            githubPane.className = 'github-config-pane p-4'; 
+            githubPane.id = 'github-config-pane';
+            githubPane.innerHTML = generateGitHubConfigHTML(); 
+            bedsContent.appendChild(githubPane);
+
+            // Create control pane and tab
+            const controlTab = document.createElement('button'); 
+            controlTab.className = 'tab-button'; 
+            controlTab.textContent = 'Controle'; 
+            controlTab.dataset.targetPane = 'control-pane'; 
+            tabsContainer.appendChild(controlTab);
+            
+            const controlPane = document.createElement('div'); 
+            controlPane.className = 'control-pane p-4'; 
+            controlPane.id = 'control-pane';
+            controlPane.innerHTML = `
+                <h2 class="text-xl font-bold mb-4">Painel de Controle Geral</h2>
+                <div class="my-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <button id="export-data-btn" class="action-button">Exportar Dados</button>
+                    <label id="import-data-label" for="import-data-input" class="action-button text-center">Importar Dados</label>
+                    <input type="file" id="import-data-input" class="hidden" accept=".json">
+                    <button id="clear-all-beds-btn" class="action-button">Limpar Todos os Leitos</button>
+                </div>
+                <ul id="control-panel-status" class="mt-4"></ul>
+            `;
+            bedsContent.appendChild(controlPane);
+            
+            // Activate the first tab by default
+            tabsContainer.querySelector('.tab-button').classList.add('active');
+            bedsContent.querySelector('.bed-pane').classList.add('active');
+            
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // GitHub configuration event listeners
+            document.getElementById('test-connection-btn').addEventListener('click', async () => {
+                const statusDiv = document.getElementById('github-status');
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'github-status warning';
+                statusDiv.textContent = 'Testando conexão...';
+
+                // Get current form values
+                const username = document.getElementById('github-username').value.trim();
+                const repository = document.getElementById('github-repository').value.trim();
+                const token = document.getElementById('github-token').value.trim();
+
+                if (!username || !repository || !token) {
+                    statusDiv.className = 'github-status error';
+                    statusDiv.textContent = 'Por favor, preencha todos os campos.';
+                    return;
+                }
+
+                // Temporarily update config for testing
+                const tempConfig = { ...githubConfig, username, repository, token };
+                const originalConfig = { ...githubConfig };
+                githubConfig = tempConfig;
+
+                try {
+                    const result = await testGitHubConnection();
+                    if (result.success) {
+                        statusDiv.className = 'github-status success';
+                        statusDiv.textContent = 'Conexão bem-sucedida! Repositório acessível.';
+                    } else {
+                        statusDiv.className = 'github-status error';
+                        statusDiv.textContent = `Erro na conexão: ${result.error}`;
+                        githubConfig = originalConfig; // Restore original config
+                    }
+                } catch (error) {
+                    statusDiv.className = 'github-status error';
+                    statusDiv.textContent = `Erro na conexão: ${error.message}`;
+                    githubConfig = originalConfig; // Restore original config
+                }
+            });
+
+            document.getElementById('save-config-btn').addEventListener('click', () => {
+                const username = document.getElementById('github-username').value.trim();
+                const repository = document.getElementById('github-repository').value.trim();
+                const token = document.getElementById('github-token').value.trim();
+
+                if (!username || !repository || !token) {
+                    const statusDiv = document.getElementById('github-status');
+                    statusDiv.style.display = 'block';
+                    statusDiv.className = 'github-status error';
+                    statusDiv.textContent = 'Por favor, preencha todos os campos.';
+                    return;
+                }
+
+                githubConfig = { username, repository, token, isConfigured: true };
+                saveGitHubConfig();
+
+                const statusDiv = document.getElementById('github-status');
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'github-status success';
+                statusDiv.textContent = 'Configuração salva com sucesso!';
+
+                // Enable sync button
+                document.getElementById('sync-now-btn').disabled = false;
+            });
+
+            document.getElementById('sync-now-btn').addEventListener('click', async () => {
+                if (!githubConfig.isConfigured) return;
+                
+                try {
+                    showSyncStatus('Sincronizando...', 'syncing');
+                    await syncAllDataToGitHub();
+                    showSyncStatus('Sincronizado com GitHub', 'success');
+                } catch (error) {
+                    console.error('Erro na sincronização:', error);
+                    showSyncStatus('Erro na sincronização', 'error');
+                }
+            });
+
+            // Original event listeners
+            document.getElementById('clear-all-beds-btn').addEventListener('click', () => {
+                confirmClearModal.style.display = 'flex';
+            });
+
+            document.getElementById('export-data-btn').addEventListener('click', () => {
+                const allData = getAllBedsData();
+                const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `dados_leitos_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            document.getElementById('import-data-input').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file && file.type === "application/json") {
+                    fileToImport = file;
+                    confirmImportModal.style.display = 'flex';
+                } else if (file) {
+                    alert("Por favor, selecione um arquivo .json válido.");
+                }
+                event.target.value = '';
+            });
+
+            // Modal event listeners
+            document.getElementById('cancel-clear-btn').addEventListener('click', () => { 
+                confirmClearModal.style.display = 'none'; 
+            });
+            
+            document.getElementById('confirm-clear-btn').addEventListener('click', async () => {
+                for (let i = 0; i < numberOfBeds; i++) {
+                    const pane = bedsContent.querySelector(`#bed-${i}`);
+                    setPaneData(pane, {});
+                }
+                confirmClearModal.style.display = 'none';
+                
+                if (githubConfig.isConfigured) {
+                    try {
+                        await syncAllDataToGitHub();
+                        showSyncStatus('Dados limpos e sincronizados', 'success');
+                    } catch (error) {
+                        console.error('Erro na sincronização:', error);
+                        showSyncStatus('Dados limpos, erro na sincronização', 'error');
+                    }
+                }
+            });
+
+            document.getElementById('cancel-import-btn').addEventListener('click', () => { 
+                confirmImportModal.style.display = 'none'; 
+                fileToImport = null; 
+            });
+            
+            document.getElementById('confirm-import-btn').addEventListener('click', () => {
+                if(fileToImport) {
+                    const reader = new FileReader();
+                    reader.onload = async function(e) {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            
+                            // Handle both old and new format
+                            let leitos = data.leitos || data;
+                            
+                            for (let i = 0; i < numberOfBeds; i++) {
+                                const bedKey = `leito-${i + 1}`;
+                                const pane = bedsContent.querySelector(`#bed-${i}`);
+                                if(leitos[bedKey]) {
+                                    setPaneData(pane, leitos[bedKey]);
+                                } else {
+                                    setPaneData(pane, {});
+                                }
+                            }
+                            
+                            if (githubConfig.isConfigured) {
+                                try {
+                                    await syncAllDataToGitHub();
+                                    showSyncStatus('Dados importados e sincronizados', 'success');
+                                } catch (error) {
+                                    console.error('Erro na sincronização:', error);
+                                    showSyncStatus('Dados importados, erro na sincronização', 'error');
+                                }
+                            }
+                        } catch (err) {
+                            alert('Erro: O arquivo de importação parece estar corrompido ou em formato inválido.');
+                            console.error("Import error:", err);
+                        }
+                    };
+                    reader.readAsText(fileToImport);
+                }
+                confirmImportModal.style.display = 'none';
+                fileToImport = null;
+            });
+        }
+        
+        function getBedDataFromPane(pane) {
+            const data = {};
+            pane.querySelectorAll('.data-input').forEach(input => {
+                const key = input.dataset.col;
+                const hour = input.dataset.hour;
+                const storageKey = hour ? `${key}-${hour}` : key;
+                const value = input.type === 'checkbox' ? input.checked : (input.value || '');
+                if (value !== '' && value !== false) {
+                    data[storageKey] = value;
+                }
+            });
+            return data;
+        }
+
+        function setPaneData(pane, data) {
+            pane.querySelectorAll('.data-input').forEach(input => {
+                const key = input.dataset.col;
+                const hour = input.dataset.hour;
+                const storageKey = hour ? `${key}-${hour}` : key;
+                const value = data ? data[storageKey] : undefined;
+
+                if (input.type === 'checkbox') {
+                    input.checked = value || false;
+                } else {
+                    input.value = value || '';
+                }
+            });
+            calculateAllTotals(pane);
+        }
+
+        function getAllBedsData() {
+            const allData = {
+                lastUpdated: new Date().toISOString(),
+                version: "1.0",
+                leitos: {}
+            };
+            
+            for (let i = 0; i < numberOfBeds; i++) {
+                const pane = bedsContent.querySelector(`#bed-${i}`);
+                if (pane) {
+                    const data = getBedDataFromPane(pane);
+                    if (Object.keys(data).length > 0) {
+                        allData.leitos[`leito-${i + 1}`] = data;
+                    }
+                }
+            }
+            
+            return allData;
+        }
+
+        async function syncAllDataToGitHub() {
+            if (!githubConfig.isConfigured) return;
+            
+            const allData = getAllBedsData();
+            const content = JSON.stringify(allData, null, 2);
+            
+            try {
+                // Try to get existing file
+                const existingFile = await getFileFromGitHub('dados-leitos.json');
+                const sha = existingFile ? existingFile.sha : null;
+                
+                // Save to GitHub
+                await saveFileToGitHub('dados-leitos.json', content, sha);
+                
+            } catch (error) {
+                console.error('Erro ao sincronizar com GitHub:', error);
+                throw error;
+            }
+        }
+
+        async function loadDataFromGitHub() {
+            if (!githubConfig.isConfigured) return false;
+            
+            try {
+                const file = await getFileFromGitHub('dados-leitos.json');
+                if (!file) return false;
+                
+                // Decode base64 content
+                const content = decodeURIComponent(escape(atob(file.content)));
+                const data = JSON.parse(content);
+                
+                // Load data into panes
+                const leitos = data.leitos || {};
+                for (let i = 0; i < numberOfBeds; i++) {
+                    const bedKey = `leito-${i + 1}`;
+                    const pane = bedsContent.querySelector(`#bed-${i}`);
+                    if (pane) {
+                        setPaneData(pane, leitos[bedKey] || {});
+                    }
+                }
+                
+                updateControlPanelStatus();
+                return true;
+            } catch (error) {
+                console.error('Erro ao carregar dados do GitHub:', error);
+                return false;
+            }
+        }
+
+        async function saveBedData(bedIndex) {
+            const pane = bedsContent.querySelector(`#bed-${bedIndex}`);
+            if (!pane) return;
+            
+            calculateAllTotals(pane);
+            
+            if (githubConfig.isConfigured) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        showSyncStatus('Sincronizando...', 'syncing');
+                        await syncAllDataToGitHub();
+                        showSyncStatus('Sincronizado com GitHub', 'success');
+                    } catch (error) {
+                        console.error('Erro na sincronização:', error);
+                        showSyncStatus('Erro na sincronização', 'error');
+                    }
+                }, 2000); // Increased debounce time for GitHub API
+            }
+        }
+        
+        function updateControlPanelStatus() {
+            const statusList = document.getElementById('control-panel-status');
+            if (!statusList) return;
+            statusList.innerHTML = '';
+            for (let i = 0; i < numberOfBeds; i++) {
+                const pane = bedsContent.querySelector(`#bed-${i}`);
+                if (!pane) continue;
+                const isComplete = pane.querySelector('.completion-checkbox').checked;
+                const balanceValue = pane.querySelector('.balanco24h').textContent;
+                const listItem = document.createElement('li');
+                listItem.className = `status-item ${isComplete ? 'completed' : 'incomplete'}`;
+                listItem.innerHTML = `<span>Leito ${i + 1} - ${isComplete ? 'Preenchido' : 'Pendente'}</span> <span class="balance">Balanço: ${balanceValue}</span>`;
+                statusList.appendChild(listItem);
+            }
+        }
+
+        function calculateAllTotals(pane) {
+            const cols = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r'];
+            let totalGanhos = 0, totalPerdas = 0;
+            const gainColumns = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'];
+            const lossColumns = ['m', 'n', 'o', 'p', 'q', 'r'];
+            
+            cols.forEach(colId => {
+                const sum = Array.from(pane.querySelectorAll(`tbody .data-input[data-col="${colId}"]`)).reduce((acc, input) => acc + (Number(input.value) || 0), 0);
+                const totalCell = pane.querySelector(`tfoot .total-${colId}`);
+                if (totalCell) totalCell.textContent = sum;
+                if (gainColumns.includes(colId)) totalGanhos += sum;
+                if (lossColumns.includes(colId)) totalPerdas += sum;
+            });
+
+            const sumNoiteInput = pane.querySelector('.sumNoite');
+            if(sumNoiteInput) sumNoiteInput.value = (totalGanhos - totalPerdas);
+            const manha = Number(pane.querySelector('.sumManha').value) || 0;
+            const tarde = Number(pane.querySelector('.sumTarde').value) || 0;
+            const noite = Number(sumNoiteInput.value) || 0;
+            pane.querySelector('.balanco24h').textContent = manha + tarde + noite;
+        }
+        
+        // --- DELEGATED EVENT LISTENERS ---
+        
+        appContainer.addEventListener('click', function(event) {
+            const target = event.target;
+
+            // Tab switching logic
+            if (target.matches('.tab-button')) {
+                const targetPaneId = target.dataset.targetPane;
+                tabsContainer.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
+                bedsContent.querySelectorAll('.bed-pane, .control-pane, .github-config-pane').forEach(p => p.classList.remove('active'));
+                target.classList.add('active');
+                const paneToActivate = document.getElementById(targetPaneId);
+                if (paneToActivate) {
+                    paneToActivate.classList.add('active');
+                }
+                if (targetPaneId === 'control-pane') updateControlPanelStatus();
+                return;
+            }
+            
+            const pane = target.closest('.bed-pane');
+            if (!pane) return;
+
+            const bedIndex = parseInt(pane.dataset.bedIndex, 10);
+
+            // Button logic inside a bed pane
+            if (target.matches('.total-cell-clear')) {
+                pane.querySelectorAll('.data-input:not([readonly])').forEach(input => {
+                    if (input.type === 'checkbox') input.checked = false; else input.value = '';
+                });
+                calculateAllTotals(pane);
+                saveBedData(bedIndex);
+            } else if (target.matches('.clear-col-button')) {
+                const colToClear = target.dataset.col;
+                if (colToClear) {
+                    pane.querySelectorAll(`tbody .data-input[data-col="${colToClear}"]`).forEach(input => { input.value = ''; });
+                    calculateAllTotals(pane);
+                    saveBedData(bedIndex);
+                }
+            } else if (target.matches('.repeat-col-button')) {
+                const colToRepeat = target.dataset.col;
+                if (lastFocusedInput && lastFocusedInput.matches(`[data-col="${colToRepeat}"]`) && pane.contains(lastFocusedInput)) {
+                    const currentValue = lastFocusedInput.value;
+                    if (currentValue) {
+                        const allRows = Array.from(pane.querySelectorAll('tbody tr.data-row'));
+                        const currentRowIndex = allRows.indexOf(lastFocusedInput.closest('tr'));
+                        for (let i = currentRowIndex + 1; i < allRows.length; i++) {
+                            const nextInput = allRows[i].querySelector(`.data-input[data-col="${colToRepeat}"]`);
+                            if (nextInput) nextInput.value = currentValue;
+                        }
+                        calculateAllTotals(pane);
+                        saveBedData(bedIndex);
+                    }
+                }
+            }
+        });
+        
+        appContainer.addEventListener('focusin', function(event) {
+            if (event.target.matches('input.data-input')) lastFocusedInput = event.target;
+        });
+
+        appContainer.addEventListener('input', function(event) {
+            const pane = event.target.closest('.bed-pane');
+            if (pane) {
+                const bedIndex = parseInt(pane.dataset.bedIndex, 10);
+                calculateAllTotals(pane);
+                if (event.target.matches('.completion-checkbox')) {
+                    updateControlPanelStatus();
+                }
+                saveBedData(bedIndex);
+            }
+        });
+
+        appContainer.addEventListener('keydown', function(event) {
+            if (!lastFocusedInput || !lastFocusedInput.closest('.bed-pane')) return;
+            
+            const pane = lastFocusedInput.closest('.bed-pane');
+            const bedIndex = parseInt(pane.dataset.bedIndex, 10);
+            const tableBody = lastFocusedInput.closest('tbody');
+            if (!tableBody) return;
+
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const currentCell = lastFocusedInput.closest('td');
+                const currentRow = currentCell.closest('tr');
+                const allRows = Array.from(tableBody.querySelectorAll('tr.data-row'));
+                const cellIndex = Array.from(currentRow.children).indexOf(currentCell);
+                const rowIndex = allRows.indexOf(currentRow);
+                if (rowIndex < allRows.length - 1) {
+                    const nextInput = allRows[rowIndex + 1].children[cellIndex]?.querySelector('.data-input:not([readonly])');
+                    if (nextInput) { nextInput.focus(); nextInput.select(); }
+                }
+            } else if (event.key === '/') {
+                event.preventDefault();
+                const colToRepeat = lastFocusedInput.dataset.col;
+                const currentValue = lastFocusedInput.value;
+                if (currentValue && colToRepeat) {
+                    const allRows = Array.from(tableBody.querySelectorAll('tr.data-row'));
+                    const currentRowIndex = allRows.indexOf(lastFocusedInput.closest('tr'));
+                    for (let i = currentRowIndex + 1; i < allRows.length; i++) {
+                        const nextInput = allRows[i].querySelector(`.data-input[data-col="${colToRepeat}"]`);
+                        if (nextInput) nextInput.value = currentValue;
+                    }
+                    calculateAllTotals(pane);
+                    saveBedData(bedIndex);
+                }
+            } else if (event.key === '*') {
+                event.preventDefault();
+                const colToClear = lastFocusedInput.dataset.col;
+                if (colToClear) {
+                    const allRows = Array.from(tableBody.querySelectorAll('tr.data-row'));
+                    const currentRowIndex = allRows.indexOf(lastFocusedInput.closest('tr'));
+                    for (let i = currentRowIndex; i < allRows.length; i++) {
+                        const inputToClear = allRows[i].querySelector(`.data-input[data-col="${colToClear}"]`);
+                        if (inputToClear) inputToClear.value = '';
+                    }
+                    calculateAllTotals(pane);
+                    saveBedData(bedIndex);
+                }
+            }
+        });
+
+        // --- APP INITIALIZATION ---
+        loadGitHubConfig();
+        setupUI();
+        
+        // Try to load data from GitHub first, fallback to empty data
+        if (githubConfig.isConfigured) {
+            loadDataFromGitHub().then(success => {
+                if (success) {
+                    showSyncStatus('Dados carregados do GitHub', 'success');
+                } else {
+                    // Initialize with empty data
+                    for (let i = 0; i < numberOfBeds; i++) {
+                        const pane = bedsContent.querySelector(`#bed-${i}`);
+                        setPaneData(pane, {});
+                    }
+                }
+            });
+        } else {
+            // Initialize with empty data
+            for (let i = 0; i < numberOfBeds; i++) {
+                const pane = bedsContent.querySelector(`#bed-${i}`);
+                setPaneData(pane, {});
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
+
