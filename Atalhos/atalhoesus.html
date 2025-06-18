@@ -3,87 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Atalhos - eSUS</title>
+    <title>Gerador de Atalhos - eSUS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilo para garantir que a fonte Inter seja usada */
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Estilo para o link do atalho se parecer com um botão e ter uma transição suave */
         .shortcut-button {
             transition: all 0.2s ease-in-out;
+            cursor: pointer;
         }
         .shortcut-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+        #alert-modal {
+            transition: opacity 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-2xl">
+    <!-- Modal de Alerta/Instrução -->
+    <div id="alert-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-lg w-full transform transition-transform duration-300 scale-95">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Código do Atalho Copiado!</h3>
+            <p class="text-gray-600 mb-4">Agora, crie o seu favorito inteligente seguindo os passos abaixo:</p>
+            <ol class="list-decimal list-inside bg-gray-50 p-4 rounded-lg text-gray-700 space-y-2">
+                <li>Na sua **Barra de Favoritos**, clique com o botão direito e escolha <strong>"Adicionar página..."</strong>.</li>
+                <li>No campo <strong>"Nome"</strong>, dê um nome para o atalho (Ex: eSUS - CAPS).</li>
+                <li>No campo <strong>"URL"</strong> ou <strong>"Endereço"</strong>, apague tudo e cole o código (<strong>Ctrl+V</strong> ou <strong>Cmd+V</strong>).</li>
+                <li>Clique em <strong>"Salvar"</strong>.</li>
+            </ol>
+            <button onclick="hideAlert()" class="mt-6 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                Entendi
+            </button>
+        </div>
+    </div>
 
+    <div class="container mx-auto p-4 md:p-8 max-w-2xl">
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Painel de Atalhos eSUS</h1>
-            <p class="text-gray-600 mt-2">Bem vindo, Daniel. Use os botões abaixo após fazer o login no eSUS.</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Gerador de Atalhos eSUS</h1>
+            <p class="text-gray-600 mt-2">Clique em um botão para copiar o código do atalho e siga as instruções.</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
             
-            <div class="p-4 bg-blue-100 border-l-4 border-blue-500 rounded-r-lg">
-                <div class="flex">
-                    <div class="py-1">
-                        <svg class="h-6 w-6 text-blue-500 mr-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-blue-800">Como usar:</p>
-                        <ol class="list-decimal list-inside text-sm text-blue-700 mt-1">
-                            <li>Em outra aba, faça login no sistema eSUS até chegar na tela de seleção.</li>
-                            <li>Volte para esta página e clique no atalho desejado.</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-
             <!-- Botões de Atalho -->
-            <a href="javascript:(function(){var searchText = 'AQUIDAUANA'; var cards = document.querySelectorAll('[data-cy=\"Acesso.card\"]'); for (var i = 0; i < cards.length; i++) { if (cards[i].textContent.includes(searchText) && cards[i].textContent.includes('Gestor municipal')) { cards[i].click(); break; }}})();" class="shortcut-button block w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-indigo-700">
+            <div onclick="copyAndInstruct(this.dataset.script)" data-script="javascript:(function(){var s='AQUIDAUANA',t='Gestor municipal',c=document.querySelectorAll('[data-cy=\"Acesso.card\"]');for(var i=0;i<c.length;i++){if(c[i].textContent.includes(s)&&c[i].textContent.includes(t)){c[i].click();break;}}})();" class="shortcut-button block w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-indigo-700">
                 <span class="text-lg">AQUIDAUANA</span>
                 <span class="block text-sm opacity-80">Tipo: Gestor municipal</span>
-            </a>
+            </div>
 
-            <a href="javascript:(function(){var searchText = 'Central Municipal de Regulacao de Aquidauana'; var cards = document.querySelectorAll('[data-cy=\"Acesso.card\"]'); for (var i = 0; i < cards.length; i++) { if (cards[i].textContent.includes(searchText)) { cards[i].click(); break; }}})();" class="shortcut-button block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-teal-700">
+            <div onclick="copyAndInstruct(this.dataset.script)" data-script="javascript:(function(){var s='Central Municipal de Regulacao de Aquidauana',c=document.querySelectorAll('[data-cy=\"Acesso.card\"]');for(var i=0;i<c.length;i++){if(c[i].textContent.includes(s)){c[i].click();break;}}})();" class="shortcut-button block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-teal-700">
                 <span class="text-lg">Central Municipal de Regulação</span>
                 <span class="block text-sm opacity-80">CBO: Enfermeiro - 223505</span>
-            </a>
+            </div>
 
-            <a href="javascript:(function(){var searchText = 'Centro de Atencao Psicossocial'; var cards = document.querySelectorAll('[data-cy=\"Acesso.card\"]'); for (var i = 0; i < cards.length; i++) { if (cards[i].textContent.includes(searchText)) { cards[i].click(); break; }}})();" class="shortcut-button block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-teal-700">
+            <div onclick="copyAndInstruct(this.dataset.script)" data-script="javascript:(function(){var s='Centro de Atencao Psicossocial',c=document.querySelectorAll('[data-cy=\"Acesso.card\"]');for(var i=0;i<c.length;i++){if(c[i].textContent.includes(s)){c[i].click();break;}}})();" class="shortcut-button block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-teal-700">
                 <span class="text-lg">Centro de Atenção Psicossocial (CAPS)</span>
                 <span class="block text-sm opacity-80">CBO: Enfermeiro - 223505</span>
-            </a>
+            </div>
 
-            <a href="javascript:(function(){var searchText = 'Centro de Reabilitacao'; var cards = document.querySelectorAll('[data-cy=\"Acesso.card\"]'); for (var i = 0; i < cards.length; i++) { if (cards[i].textContent.includes(searchText)) { cards[i].click(); break; }}})();" class="shortcut-button block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-teal-700">
+            <div onclick="copyAndInstruct(this.dataset.script)" data-script="javascript:(function(){var s='Centro de Reabilitacao',c=document.querySelectorAll('[data-cy=\"Acesso.card\"]');for(var i=0;i<c.length;i++){if(c[i].textContent.includes(s)){c[i].click();break;}}})();" class="shortcut-button block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-teal-700">
                 <span class="text-lg">Centro de Reabilitação</span>
                 <span class="block text-sm opacity-80">CBO: Enfermeiro - 223505</span>
-            </a>
+            </div>
             
-            <a href="javascript:(function(){var searchText = 'Estrategia de Saude da Familia Camisao'; var cards = document.querySelectorAll('[data-cy=\"Acesso.card\"]'); for (var i = 0; i < cards.length; i++) { if (cards[i].textContent.includes(searchText)) { cards[i].click(); break; }}})();" class="shortcut-button block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-teal-700">
+            <div onclick="copyAndInstruct(this.dataset.script)" data-script="javascript:(function(){var s='Estrategia de Saude da Familia Camisao',c=document.querySelectorAll('[data-cy=\"Acesso.card\"]');for(var i=0;i<c.length;i++){if(c[i].textContent.includes(s)){c[i].click();break;}}})();" class="shortcut-button block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg text-left hover:bg-teal-700">
                 <span class="text-lg">Estratégia de Saúde da Família Camisão</span>
                 <span class="block text-sm opacity-80">CBO: Enfermeiro - 223505</span>
-            </a>
-
-            <!-- Adicione mais botões aqui se precisar -->
-
+            </div>
         </div>
 
         <footer class="text-center text-gray-500 mt-8 text-sm">
-            <p>Esta é uma página local e não armazena nenhuma informação sua.</p>
+            <p>Esta página ajuda a criar atalhos e não armazena nenhuma informação.</p>
         </footer>
-
     </div>
 
+    <script>
+        const alertModal = document.getElementById('alert-modal');
+
+        function copyAndInstruct(scriptText) {
+            // Cria um elemento de texto temporário para copiar o conteúdo
+            const tempInput = document.createElement('textarea');
+            tempInput.value = scriptText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            // Mostra o modal de alerta
+            showAlert();
+        }
+
+        function showAlert() {
+            alertModal.classList.remove('opacity-0', 'pointer-events-none');
+            alertModal.querySelector('div').classList.remove('scale-95');
+        }
+
+        function hideAlert() {
+            alertModal.classList.add('opacity-0');
+            alertModal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                alertModal.classList.add('pointer-events-none');
+            }, 300); // Espera a transição terminar
+        }
+    </script>
 </body>
 </html>
