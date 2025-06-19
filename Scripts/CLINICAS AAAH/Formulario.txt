@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <!-- Usando a fonte Inter do Google Fonts para um visual mais moderno -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 24px;
+      }
+      .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 6px;
+        display: block;
+      }
+      input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      input:focus, select:focus, textarea:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+      }
+      textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+      .button-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.1s;
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+      #save-button {
+        background-color: #007bff;
+        color: white;
+      }
+      #save-button:hover {
+        background-color: #0056b3;
+      }
+      #save-button:disabled {
+        background-color: #a0cfff;
+        cursor: not-allowed;
+      }
+      #cancel-button {
+        background-color: #f1f3f5;
+        color: #495057;
+        border: 1px solid #dee2e6;
+      }
+      #cancel-button:hover {
+        background-color: #e9ecef;
+      }
+      .full-width {
+        grid-column: 1 / -1;
+      }
+      .loader {
+        text-align: center;
+        padding: 20px;
+        font-weight: 500;
+        color: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="form-container" class="form-container">
+      
+      <div class="form-row">
+        <div>
+          <label for="data">Data</label>
+          <input type="date" id="data" name="data" required>
+        </div>
+        <div>
+          <label for="leito">Leito</label>
+          <input type="text" id="leito" name="leito" placeholder="Ex: 20 L5">
+        </div>
+      </div>
+
+      <div class="full-width">
+        <label for="paciente">Nome do Paciente</label>
+        <input type="text" id="paciente" name="paciente" required>
+      </div>
+      
+      <div class="form-row">
+        <div>
+          <label for="idade">Idade</label>
+          <input type="text" id="idade" name="idade" placeholder="Ex: 70 ANOS">
+        </div>
+        <div>
+          <label for="dependencia">Nível de Dependência</label>
+          <select id="dependencia" name="dependencia">
+            <option value="">Selecione...</option>
+            <option value="Mínima">Mínima</option>
+            <option value="Intermediário">Intermediário</option>
+            <option value="Alta dependência">Alta dependência</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="full-width">
+        <label for="motivo">Motivo da Internação</label>
+        <textarea id="motivo" name="motivo"></textarea>
+      </div>
+      
+      <div class="form-row">
+        <div>
+          <label for="enfermeiro">Enfermeiro(a)</label>
+          <input type="text" id="enfermeiro" name="enfermeiro">
+        </div>
+         <div>
+          <label for="pendencia">Pendência</label>
+          <input type="text" id="pendencia" name="pendencia">
+        </div>
+      </div>
+
+      <div class="full-width">
+        <label for="evolucao">Evolução / Observações</label>
+        <textarea id="evolucao" name="evolucao"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="ambiente">Ambiente</label>
+          <select id="ambiente" name="ambiente">
+            <option value="Ar Ambiente SUS">Ar Ambiente SUS</option>
+            <option value="Ar Ambiente Particular">Ar Ambiente Particular</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div>
+          <label for="alta">Recebeu Alta?</label>
+          <select id="alta" name="alta">
+            <option value="Não">Não</option>
+            <option value="Sim">Sim</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="button-container">
+        <button id="cancel-button" onclick="google.script.host.close()">Cancelar</button>
+        <button id="save-button" onclick="handleFormSubmit()">Salvar</button>
+      </div>
+
+    </div>
+    
+    <div id="loader" class="loader" style="display:none;">
+      Salvando... Por favor, aguarde.
+    </div>
+
+    <script>
+      // Seta a data de hoje como padrão no campo de data.
+      document.getElementById('data').valueAsDate = new Date();
+
+      function handleFormSubmit() {
+        const saveButton = document.getElementById('save-button');
+        const formContainer = document.getElementById('form-container');
+        const loader = document.getElementById('loader');
+
+        // Desabilita o botão e mostra o loader
+        saveButton.disabled = true;
+        formContainer.style.display = 'none';
+        loader.style.display = 'block';
+
+        // Coleta todos os dados do formulário
+        var dadosDoFormulario = {
+          data: document.getElementById('data').value,
+          paciente: document.getElementById('paciente').value,
+          idade: document.getElementById('idade').value,
+          dependencia: document.getElementById('dependencia').value,
+          motivo: document.getElementById('motivo').value,
+          enfermeiro: document.getElementById('enfermeiro').value,
+          evolucao: document.getElementById('evolucao').value,
+          pendencia: document.getElementById('pendencia').value,
+          ambiente: document.getElementById('ambiente').value,
+          alta: document.getElementById('alta').value,
+          leito: document.getElementById('leito').value
+        };
+        
+        // Envia os dados para a função 'salvarDados' no Code.gs
+        google.script.run
+          .withSuccessHandler(function(resposta) {
+            // Se for sucesso, fecha o formulário
+            if(resposta.status === 'sucesso') {
+              google.script.host.close();
+            } else {
+              // Se der erro, mostra o alerta e reativa o formulário
+              alert('Erro ao salvar: ' + resposta.mensagem);
+              saveButton.disabled = false;
+              formContainer.style.display = 'flex';
+              loader.style.display = 'none';
+            }
+          })
+          .withFailureHandler(function(erro) {
+            alert('Falha crítica ao se comunicar com o script: ' + erro.message);
+            saveButton.disabled = false;
+            formContainer.style.display = 'flex';
+            loader.style.display = 'none';
+          })
+          .salvarDados(dadosDoFormulario);
+      }
+    </script>
+  </body>
+</html>

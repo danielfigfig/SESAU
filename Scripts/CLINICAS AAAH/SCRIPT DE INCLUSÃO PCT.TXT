@@ -1,0 +1,63 @@
+/**
+ * @OnlyCurrentDoc
+ * O código abaixo cria um menu personalizado na planilha para gerenciar pacientes.
+ */
+
+// Esta função é executada automaticamente quando a planilha é aberta.
+function onOpen() {
+  SpreadsheetApp.getUi()
+      .createMenu('🏥 Controle de Pacientes')
+      .addItem('➕ Adicionar Novo Paciente', 'abrirFormulario')
+      .addToUi();
+}
+
+/**
+ * Abre o formulário de cadastro de pacientes em um diálogo modal.
+ */
+function abrirFormulario() {
+  // Cria o HTML a partir do arquivo 'Formulario.html'
+  var html = HtmlService.createHtmlOutputFromFile('Formulario')
+      .setWidth(600)
+      .setHeight(550);
+  // Exibe o formulário
+  SpreadsheetApp.getUi().showModalDialog(html, 'Registrar Novo Paciente');
+}
+
+/**
+ * Salva os dados do formulário na planilha.
+ * @param {Object} dadosDoFormulario O objeto contendo os dados do paciente.
+ */
+function salvarDados(dadosDoFormulario) {
+  try {
+    // IMPORTANTE: Altere 'Dados' para o nome exato da aba onde os dados devem ser salvos.
+    var aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Dados');
+    
+    // Se a aba não for encontrada, lança um erro.
+    if (!aba) {
+      throw new Error("A aba 'Dados' não foi encontrada. Verifique o nome da sua planilha.");
+    }
+    
+    // Monta a linha na ordem correta das colunas da sua planilha
+    // Ajuste a ordem se as colunas da sua planilha forem diferentes.
+    aba.appendRow([
+      dadosDoFormulario.data,
+      dadosDoFormulario.paciente,
+      dadosDoFormulario.idade,
+      dadosDoFormulario.dependencia,
+      dadosDoFormulario.motivo,
+      dadosDoFormulario.enfermeiro,
+      dadosDoFormulario.evolucao,
+      dadosDoFormulario.pendencia,
+      dadosDoFormulario.ambiente,
+      dadosDoFormulario.alta === 'Sim' ? 'SIM' : 'NÃO', // Converte para maiúsculo
+      dadosDoFormulario.leito
+    ]);
+    
+    // Retorna uma mensagem de sucesso
+    return { status: 'sucesso', mensagem: 'Paciente adicionado com sucesso!' };
+  } catch (e) {
+    // Retorna uma mensagem de erro
+    Logger.log(e);
+    return { status: 'erro', mensagem: e.toString() };
+  }
+}
