@@ -1,0 +1,144 @@
+/**
+ * @OnlyCurrentDoc
+ * Este script funciona como um "sentinela" que monitora uma aba e registra
+ * todas as linhas que são deletadas em um log separado.
+ */
+
+// --- CONFIGURAÇÕES ---
+const ABA_PRINCIPAL = 'Dados';      // Nome da sua aba principal a ser monitorada.
+const ABA_LOG = 'Log de Exclusões'; // Nome da aba onde o log de linhas deletadas será salvo.
+const FREQUENCIA_MINUTOS = 5;       // De quantos em quantos minutos a verificação será feita.
+// --------------------
+
+
+/**
+ * Cria o menu na interface da planilha quando ela é aberta.
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+      .createMenu('🛡️ Proteção de Dados')
+      .addItem('Ativar Monitoramento de Exclusões', 'configurarTriggerDeVerificacao')
+      .addItem('Desativar Monitoramento', 'deletarTriggers')
+      .addToUi();
+}
+
+/**
+ * Configura o gatilho (trigger) que executará a verificação periodicamente.
+ * O usuário precisa executar esta função uma vez pelo menu para iniciar.
+ */
+function configurarTriggerDeVerificacao() {
+  deletarTriggers(); // Garante que não haja triggers duplicados.
+
+  // Cria o gatilho que vai rodar a função 'verificarLinhasDeletadas' no intervalo definido.
+  ScriptApp.newTrigger('verificarLinhasDeletadas')
+      .timeBased()
+      .everyMinutes(FREQUENCIA_MINUTOS)
+      .create();
+
+  // Tira a primeira "foto" (snapshot) dos dados para iniciar o monitoramento.
+  criarSnapshotAtual(); 
+
+  SpreadsheetApp.getUi().alert(`Monitoramento ativado! A planilha será verificada a cada ${FREQUENCIA_MINUTOS} minutos.`);
+}
+
+/**
+ * Remove os triggers de verificação para parar o monitoramento.
+ */
+function deletarTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'verificarLinhasDeletadas') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+}
+
+/**
+ * Tira uma "foto" dos dados atuais da aba principal e salva na memória do script.
+ */
+function criarSnapshotAtual() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ABA_PRINCIPAL);
+    if (!sheet) return; // Sai se a aba principal não existir.
+    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+    // Converte os dados para um texto (JSON) para serem armazenados.
+    const dataString = JSON.stringify(data);
+    PropertiesService.getScriptProperties().setProperty('snapshotDados', dataString);
+  } catch (e) {
+    Logger.log('Erro ao criar snapshot: ' + e.toString());
+  }
+}
+
+/**
+ * Função principal que é executada pelo gatilho. Compara os dados atuais com o
+ * snapshot anterior e registra as diferenças.
+ */
+function verificarLinhasDeletadas() {
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const snapshotAnteriorJSON = scriptProperties.getProperty('snapshotDados');
+
+  // Se não houver snapshot, não faz nada (pode ter ocorrido um erro na criação).
+  if (!snapshotAnteriorJSON) {
+    Logger.log('Nenhum snapshot encontrado para comparação. Um novo será criado na próxima execução do gatilho.');
+    criarSnapshotAtual(); // Tenta criar um novo para a próxima vez.
+    return;
+  }
+  
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ABA_PRINCIPAL);
+  if (!sheet) return;
+  const dadosAtuais = sheet.getRange(2, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+
+  const dadosAnteriores = JSON.parse(snapshotAnteriorJSON);
+  
+  // Cria um "catálogo" dos dados atuais para uma busca muito rápida.
+  const setDadosAtuais = new Set(dadosAtuais.map(row => JSON.stringify(row)));
+
+  const linhasDeletadas = [];
+  
+  // Compara cada linha do snapshot antigo com o catálogo de dados atuais.
+  for (const linhaAnterior of dadosAnteriores) {
+    if (!setDadosAtuais.has(JSON.stringify(linhaAnterior))) {
+      // Se uma linha antiga não está nos dados atuais, ela foi deletada.
+      linhasDeletadas.push(linhaAnterior);
+    }
+  }
+
+  // Se encontrou linhas deletadas, registra no log.
+  if (linhasDeletadas.length > 0) {
+    logarLinhas(linhasDeletadas);
+  }
+
+  // Por fim, atualiza o snapshot com os dados atuais para a próxima verificação.
+  scriptProperties.setProperty('snapshotDados', JSON.stringify(dadosAtuais));
+}
+
+/**
+ * Recebe as linhas que foram deletadas e as salva na aba de Log.
+ * @param {Array<Array<any>>} linhas - Um array com as linhas a serem logadas.
+ */
+function logarLinhas(linhas) {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let logSheet = spreadsheet.getSheetByName(ABA_LOG);
+  if (!logSheet) {
+    logSheet = spreadsheet.insertSheet(ABA_LOG);
+    // Formata a nova aba para melhor visualização
+    logSheet.getRange('A1').activate();
+    spreadsheet.moveActiveSheet(spreadsheet.getNumSheets());
+  }
+  
+  // Adiciona o cabeçalho no log se ele estiver vazio.
+  if (logSheet.getLastRow() === 0) {
+    const sheetPrincipal = spreadsheet.getSheetByName(ABA_PRINCIPAL);
+    const cabecalho = sheetPrincipal.getRange(1, 1, 1, sheetPrincipal.getLastColumn()).getValues();
+    cabecalho[0].push('Data da Exclusão');
+    logSheet.appendRow(cabecalho[0]);
+  }
+  
+  const dataExclusao = new Date();
+  
+  // Adiciona cada linha deletada no log.
+  for (const linha of linhas) {
+    const linhaComData = [...linha, dataExclusao];
+    logSheet.appendRow(linhaComData);
+  }
+}
