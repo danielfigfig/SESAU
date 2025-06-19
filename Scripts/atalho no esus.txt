@@ -1,0 +1,241 @@
+// ==UserScript==
+// @name         Atalhos eSUS - Aquidauana (v6.0)
+// @namespace    http://tampermonkey.net/
+// @version      6.0
+// @description  Adiciona um menu de atalhos personalizável com captura visual e funções para importar/exportar suas configurações.
+// @author       Daniel (com ajuda do Gemini)
+// @match        https://esus.aquidauana.ms.gov.br/*
+// @grant        GM_setClipboard
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // --- ESTILOS CSS PARA APLICAÇÃO ---
+    const styles = `
+        @keyframes gemini-pulse-border { 0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); } }
+        .gemini-capture-target { cursor: pointer; animation: gemini-pulse-border 2s infinite; border-radius: 8px; }
+    `;
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
+
+
+    // --- CONFIGURAÇÃO E ESTADO ---
+    const STORAGE_KEY = 'esus_custom_shortcuts_v3';
+    const DEFAULT_SHORTCUTS = [
+        { nome: 'AQUIDAUANA (Gestor)', textoBusca: 'AQUIDAUANA', textoBusca2: 'Gestor municipal', isDefault: true },
+        { nome: 'Regulação', textoBusca: 'Central Municipal de Regulacao de Aquidauana', isDefault: true },
+        { nome: 'CAPS', textoBusca: 'Centro de Atencao Psicossocial', isDefault: true },
+        { nome: 'Reabilitação', textoBusca: 'Centro de Reabilitacao', isDefault: true },
+        { nome: 'ESF Camisão', textoBusca: 'Estrategia de Saude da Familia Camisao', isDefault: true }
+    ];
+
+    let isManageMode = false;
+    let isCaptureMode = false;
+
+    // --- ARMAZENAMENTO ---
+    function getCustomShortcuts() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function saveCustomShortcuts(shortcuts) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(shortcuts));
+        renderMenu();
+    }
+
+
+    // --- MODAL PERSONALIZADO (AGORA SUPORTA TEXTAREA) ---
+    function showModal(title, options) {
+        const existingModal = document.getElementById('gemini-modal-overlay');
+        if (existingModal) existingModal.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'gemini-modal-overlay';
+        Object.assign(overlay.style, { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', zIndex: '10000', display: 'flex', alignItems: 'center', justifyContent: 'center' });
+        const modal = document.createElement('div');
+        Object.assign(modal.style, { background: 'white', padding: '20px', borderRadius: '8px', width: '400px', boxShadow: '0 5px 15px rgba(0,0,0,0.3)', fontFamily: 'sans-serif' });
+        const modalTitle = document.createElement('h3');
+        modalTitle.textContent = title;
+        modal.appendChild(modalTitle);
+        
+        let inputField;
+        if (options.prompt || options.textarea) {
+            inputField = options.textarea ? document.createElement('textarea') : document.createElement('input');
+            if (options.textarea) { Object.assign(inputField.style, { height: '150px', resize: 'vertical' }); }
+            inputField.value = options.defaultValue || '';
+            Object.assign(inputField.style, { width: '100%', padding: '8px', marginTop: '10px', boxSizing: 'border-box' });
+            if (options.isReadOnly) inputField.readOnly = true;
+            modal.appendChild(inputField);
+        }
+
+        const buttonContainer = document.createElement('div');
+        Object.assign(buttonContainer.style, { marginTop: '20px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '10px' });
+        
+        if (options.onCopy) {
+            const copyButton = document.createElement('button');
+            copyButton.textContent = 'Copiar para a Área de Transferência';
+            copyButton.onclick = () => { options.onCopy(inputField.value); copyButton.textContent = "Copiado!"; setTimeout(() => { copyButton.textContent = 'Copiar para a Área de Transferência'; }, 2000); };
+            buttonContainer.appendChild(copyButton);
+        }
+        
+        const okButton = document.createElement('button');
+        okButton.textContent = options.okText || 'OK';
+        okButton.onclick = () => { overlay.remove(); if (options.onOk) options.onOk(inputField ? inputField.value : true); };
+        
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = options.cancelText || 'Fechar';
+        cancelButton.onclick = () => { overlay.remove(); if (options.onCancel) options.onCancel(); };
+        
+        buttonContainer.appendChild(cancelButton);
+        if (options.onOk) buttonContainer.appendChild(okButton);
+        
+        modal.appendChild(buttonContainer);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        if (inputField) inputField.focus();
+    }
+
+
+    // --- LÓGICA DE INTERAÇÃO E SINCRONIZAÇÃO ---
+    function clickCard(textoBusca, textoBusca2 = null) {
+        if (isManageMode || isCaptureMode) return;
+        const cards = document.querySelectorAll('[data-cy="Acesso.card"]');
+        for (const card of cards) {
+            const cardText = card.textContent || card.innerText;
+            if (cardText.includes(textoBusca) && (!textoBusca2 || cardText.includes(textoBusca2))) { card.click(); return; }
+        }
+    }
+
+    const handleCardCaptureClick = (e) => {
+        const card = e.currentTarget;
+        const lines = (card.textContent || card.innerText).split('\n').map(t => t.trim()).filter(Boolean);
+        const textoBusca = lines[0] || '', textoBusca2 = lines[1] || null;
+        endCaptureMode();
+        showModal('Nome do Atalho', { prompt: true, defaultValue: textoBusca, okText: 'Salvar', onOk: (nome) => {
+            if (nome) { const customShortcuts = getCustomShortcuts(); customShortcuts.push({ nome, textoBusca, textoBusca2 }); saveCustomShortcuts(customShortcuts); }
+        }});
+    };
+
+    function startCaptureMode() {
+        if (isManageMode) return;
+        isCaptureMode = true;
+        document.querySelectorAll('[data-cy="Acesso.card"]').forEach(card => { card.classList.add('gemini-capture-target'); card.addEventListener('click', handleCardCaptureClick); });
+        renderMenu();
+    }
+
+    function endCaptureMode() {
+        isCaptureMode = false;
+        document.querySelectorAll('[data-cy="Acesso.card"]').forEach(card => { card.classList.remove('gemini-capture-target'); card.removeEventListener('click', handleCardCaptureClick); });
+        renderMenu();
+    }
+
+    function exportShortcuts() {
+        const shortcuts = getCustomShortcuts();
+        if (shortcuts.length === 0) {
+            showModal("Exportar Atalhos", { onCancel: () => {}, defaultValue: 'Não há atalhos personalizados para exportar.' });
+            return;
+        }
+        const backupString = JSON.stringify(shortcuts, null, 2);
+        showModal("Exportar Atalhos", {
+            textarea: true, defaultValue: backupString, isReadOnly: true,
+            onCopy: (text) => GM_setClipboard(text, "text")
+        });
+    }
+
+    function importShortcuts() {
+        showModal("Importar Atalhos", {
+            textarea: true, okText: 'Importar',
+            onOk: (text) => {
+                if (!text) return;
+                try {
+                    const newShortcuts = JSON.parse(text);
+                    if (!Array.isArray(newShortcuts)) throw new Error("O formato dos dados é inválido.");
+                    // Validação simples dos objetos importados
+                    newShortcuts.forEach(s => { if (typeof s.nome !== 'string' || typeof s.textoBusca !== 'string') throw new Error("Atalho com formato inválido encontrado."); });
+                    saveCustomShortcuts(newShortcuts);
+                    showModal("Sucesso!", { defaultValue: "Seus atalhos foram importados." });
+                } catch (e) {
+                    showModal("Erro na Importação", { defaultValue: `Não foi possível importar os atalhos. Verifique se o texto copiado está correto.\n\nDetalhes: ${e.message}` });
+                }
+            }
+        });
+    }
+
+    // --- RENDERIZAÇÃO DO MENU ---
+    function renderMenu() {
+        let menuContainer = document.getElementById('gemini-esus-menu');
+        if (!menuContainer) { menuContainer = document.createElement('div'); menuContainer.id = 'gemini-esus-menu'; document.body.appendChild(menuContainer); }
+        menuContainer.innerHTML = '';
+        Object.assign(menuContainer.style, { position: 'fixed', top: '100px', right: '20px', zIndex: '9999', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '8px', padding: '15px', boxShadow: '0 6px 12px rgba(0,0,0,0.15)', fontFamily: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif', width: '220px' });
+        
+        const titulo = document.createElement('h3');
+        Object.assign(titulo.style, { textAlign: 'center', margin: '0 0 15px 0', color: '#212529', fontSize: '18px', fontWeight: '600', borderBottom: '1px solid #dee2e6', paddingBottom: '10px' });
+        if (isCaptureMode) { titulo.innerText = 'Clique no Acesso'; }
+        else if (isManageMode) { titulo.innerText = 'Gerenciar Atalhos'; }
+        else { titulo.innerText = 'Meus Atalhos'; }
+        menuContainer.appendChild(titulo);
+
+        const buttonsList = document.createElement('div');
+        Object.assign(buttonsList.style, { maxHeight: '250px', overflowY: 'auto', paddingRight: '5px' });
+        menuContainer.appendChild(buttonsList);
+        
+        const customShortcuts = getCustomShortcuts();
+        if (isManageMode && customShortcuts.length === 0) {
+            const info = document.createElement('p');
+            info.textContent = 'Não há atalhos personalizados para excluir.';
+            Object.assign(info.style, { fontSize: '12px', color: '#6c757d', textAlign: 'center', margin: '10px 0', fontStyle: 'italic' });
+            buttonsList.appendChild(info);
+        }
+
+        [...DEFAULT_SHORTCUTS, ...customShortcuts].forEach((shortcut) => {
+            const btnContainer = document.createElement('div');
+            Object.assign(btnContainer.style, { display: 'flex', alignItems: 'center', marginBottom: '8px' });
+            const button = document.createElement('button');
+            button.innerText = shortcut.nome;
+            button.onclick = () => clickCard(shortcut.textoBusca, shortcut.textoBusca2);
+            Object.assign(button.style, { flexGrow: '1', padding: '10px', border: 'none', borderRadius: '5px', backgroundColor: '#007bff', color: 'white', cursor: 'pointer', textAlign: 'center', fontSize: '14px', transition: 'background-color 0.2s' });
+            button.addEventListener('mouseover', () => { if (!isManageMode && !isCaptureMode) button.style.backgroundColor = '#0056b3'; });
+            button.addEventListener('mouseout', () => button.style.backgroundColor = '#007bff');
+            btnContainer.appendChild(button);
+
+            if (!shortcut.isDefault && isManageMode) {
+                const delBtn = document.createElement('button');
+                delBtn.innerText = 'X';
+                Object.assign(delBtn.style, { marginLeft: '8px', padding: '5px 10px', border: 'none', borderRadius: '50%', backgroundColor: '#dc3545', color: 'white', cursor: 'pointer', fontWeight: 'bold' });
+                delBtn.onclick = () => { showModal(`Excluir "${shortcut.nome}"?`, { okText: 'Excluir', onOk: () => saveCustomShortcuts(getCustomShortcuts().filter(s => !(s.nome === shortcut.nome && s.textoBusca === shortcut.textoBusca))) }); };
+                btnContainer.appendChild(delBtn);
+            }
+            buttonsList.appendChild(btnContainer);
+        });
+
+        const actionsContainer = document.createElement('div');
+        Object.assign(actionsContainer.style, { borderTop: '1px solid #dee2e6', marginTop: '15px', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' });
+
+        if (isCaptureMode) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerText = 'Cancelar Captura'; cancelBtn.onclick = endCaptureMode;
+            Object.assign(cancelBtn.style, { backgroundColor: '#dc3545', padding: '8px', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' });
+            actionsContainer.appendChild(cancelBtn);
+        } else {
+            const addBtn = document.createElement('button'); addBtn.innerText = 'Adicionar Atalho'; addBtn.onclick = startCaptureMode;
+            const manageBtn = document.createElement('button'); manageBtn.innerText = isManageMode ? 'Concluir' : 'Gerenciar Atalhos'; manageBtn.onclick = () => { isManageMode = !isManageMode; renderMenu(); };
+            const importBtn = document.createElement('button'); importBtn.innerText = 'Importar Atalhos'; importBtn.onclick = importShortcuts;
+            const exportBtn = document.createElement('button'); exportBtn.innerText = 'Exportar Atalhos'; exportBtn.onclick = exportShortcuts;
+
+            [addBtn, manageBtn, importBtn, exportBtn].forEach((btn, i) => {
+                const colors = ['#28a745', '#6c757d', '#17a2b8', '#17a2b8'];
+                Object.assign(btn.style, { backgroundColor: i === 1 && isManageMode ? '#ffc107' : colors[i], padding: '8px', color: (i === 1 && isManageMode) ? 'black' : 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' });
+                if(isManageMode && i !== 1) { btn.disabled = true; btn.style.opacity = '0.5'; }
+                actionsContainer.appendChild(btn);
+            });
+        }
+        menuContainer.appendChild(actionsContainer);
+    }
+
+    // --- INICIALIZAÇÃO ---
+    const pageCheck = setInterval(() => {
+        if (document.querySelector('[data-cy="Acesso.card"]')) { clearInterval(pageCheck); renderMenu(); }
+    }, 500);
+
+})();
