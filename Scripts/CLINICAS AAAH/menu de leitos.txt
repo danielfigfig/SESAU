@@ -1,0 +1,184 @@
+//GUIA LISTA
+
+var guialista = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Lista"); //ALTERAR
+var linhainicial = 2; //ALTERAR
+var colunainicial = 1; //ALTERAR
+var totalcolunas = 2; //ALTERAR var totalcolunas = 3;
+
+//CONSIDERAR POSIÇÃO DAS COLUNAS CAPTURADAS NO ARRAY
+var colunapais = 0; //ALTERAR
+var colunaestado = 1; //ALTERAR
+var colunacidade = 2; //ALTERAR
+
+
+// GUIA DADOS
+
+var nomeguiadados = "Dados";
+var linhacabecalho = 1; //ALTERAR
+var colpaisplan = 1; //ALTERAR
+var colestadoplan = 2; //ALTERAR
+var colcidadeplan = 3; //ALTERAR
+
+
+function onEdit(e) {
+  
+  
+  var GuiaAtiva = SpreadsheetApp.getActive().getSheetName();
+
+  
+   if (GuiaAtiva == nomeguiadados){ 
+
+     var celula = e.range;  
+     var coluna = celula.getColumn();
+   
+
+      // PRIMEIRA LISTA
+
+       if (coluna == colpaisplan){
+       
+         var guia = celula.getSheet();
+         
+         var linha = celula.getRow();
+         
+            if(linha > linhacabecalho){
+            
+               var pais = celula.getValue();
+               
+                 var listaestado = guia.getRange(linha, colestadoplan);               
+                 listaestado.setValue("");
+
+                 var listacidade = guia.getRange(linha, colcidadeplan);               
+                 listacidade.setValue("");
+
+                  if (pais==""){ 
+                  
+                     listaestado.clearDataValidations();
+                     listacidade.clearDataValidations();
+                                       
+                  }else{
+                  
+                    var regra = SpreadsheetApp.newDataValidation();
+                    
+                    var estados = PegarEstado(pais);
+                   
+                   regra.requireValueInList(estados, true);
+                   
+                   regra.setAllowInvalid(false);
+                   
+                   regra.setHelpText("Selecione apenas estados: "+pais);
+                   
+                   listaestado.clearDataValidations();
+                   
+                   listaestado.setDataValidation(regra);
+                   
+                  }
+               
+            }
+       
+       }
+   
+
+ // SEGUNDA LISTA
+
+       if (coluna == colestadoplan){
+       
+         var guia = celula.getSheet();
+         
+         var linha = celula.getRow();
+         
+            if(linha > linhacabecalho){
+               
+               var pais = guia.getRange(linha, colpaisplan).getValue();
+               var estado = celula.getValue();
+               
+                 var listacidade = guia.getRange(linha, colcidadeplan);               
+                 listacidade.setValue("");
+                  
+                  if (pais == "" || estado =="" ){ 
+                  
+                     listacidade.clearDataValidations();
+                                       
+                  }else{
+                  
+                    var regra = SpreadsheetApp.newDataValidation();
+
+                    var cidades = PegarCidades(pais,estado);
+                   
+                   regra.requireValueInList(cidades, true);
+                   
+                   regra.setAllowInvalid(false);
+                   
+                   regra.setHelpText("Selecione apenas cidades: "+pais + " estado " + estado);
+                   
+                   listacidade.clearDataValidations();
+                   
+                   listacidade.setDataValidation(regra);
+                   
+                  }
+               
+            }
+       
+       }
+
+
+
+
+   }
+ 
+  
+  
+  
+  
+  
+}
+
+
+
+
+function PegarEstado(pais){
+
+var dados = guialista.getRange(linhainicial, colunainicial, guialista.getLastRow(),totalcolunas).getValues(); 
+
+var b = {};
+
+    for (var i = 0; i < dados.length; i++) {
+
+       if(dados[i][colunapais]==pais){
+
+       b[dados[i][colunaestado]] = dados[i][colunaestado];
+       
+          var estados = [];
+     
+          for (var key in b) {
+         estados.push([key]);
+         }
+       }
+    }
+  dados.length = 0;
+ return estados;
+
+
+ }
+
+
+
+
+//function PegarCidades(pais,estado){
+
+//var dados = guialista.getRange(linhainicial, colunainicial, guialista.getLastRow(),totalcolunas).getValues(); 
+
+//var cidades = [];
+
+    //for (var i = 0; i < dados.length; i++) {
+
+       //if(dados[i][colunapais]==pais && dados[i][colunaestado]==estado){
+       // cidades.push(dados[i][colunacidade]);
+       //}
+   // }
+ 
+ //dados.length = 0;
+
+ //return cidades;
+
+
+ //}
