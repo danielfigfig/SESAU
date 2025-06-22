@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle de Pacientes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 90%;
+            width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .table-responsive {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center gap-2;
+        }
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300;
+        }
+        .btn-danger {
+             @apply bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition duration-300;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 md:p-8">
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Painel de Controle de Pacientes</h1>
+            <p class="text-gray-600 mt-2">Gerencie os registros de pacientes em tempo real.</p>
+        </header>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 md:mb-0">Lista de Pacientes</h2>
+                <button id="addPatientBtn" class="btn-primary">
+                    <i class="fas fa-plus"></i> Adicionar Paciente
+                </button>
+            </div>
+            
+            <div id="loading" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin fa-2x text-blue-600"></i>
+                <p class="mt-2 text-gray-500">Carregando dados...</p>
+            </div>
+
+            <div id="patientTableContainer" class="table-responsive hidden">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Situação</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nome do Paciente</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Idade</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Diagnóstico</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Data de Internação</th>
+                            <th class="py-3 px-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientList" class="divide-y divide-gray-200">
+                        <!-- As linhas da tabela serão inseridas aqui via JavaScript -->
+                    </tbody>
+                </table>
+                 <p id="noDataMessage" class="text-center py-8 text-gray-500 hidden">Nenhum paciente encontrado. Adicione um novo registro para começar.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar/Editar Paciente -->
+    <div id="patientModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="text-2xl font-bold mb-6">Adicionar Novo Paciente</h3>
+            <form id="patientForm">
+                <input type="hidden" id="patientId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input type="text" id="nome" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="dataInternacao" class="block text-sm font-medium text-gray-700">Data de Internação</label>
+                        <input type="date" id="dataInternacao" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="idade" class="block text-sm font-medium text-gray-700">Idade</label>
+                        <input type="text" id="idade" placeholder="Ex: 6 MESES, 42 ANOS" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="situacao" class="block text-sm font-medium text-gray-700">Situação</label>
+                        <input type="text" id="situacao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="classificacao" class="block text-sm font-medium text-gray-700">Classificação</label>
+                        <select id="classificacao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option>Mínimos</option>
+                            <option>Intermediário</option>
+                            <option>Alta Complexidade</option>
+                            <option>Crítico</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="diagnostico" class="block text-sm font-medium text-gray-700">Diagnóstico</label>
+                        <input type="text" id="diagnostico" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="medico" class="block text-sm font-medium text-gray-700">Médico</label>
+                        <input type="text" id="medico" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                     <div>
+                        <label for="convenio" class="block text-sm font-medium text-gray-700">Convênio</label>
+                        <input type="text" id="convenio" value="SUS" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                     <div>
+                        <label for="supVentilatorio" class="block text-sm font-medium text-gray-700">Sup. Ventilatório</label>
+                        <input type="text" id="supVentilatorio" value="Ar Ambiente" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="block text-sm font-medium text-gray-700">Pele Íntegra?</label>
+                        <input type="checkbox" id="peleIntegra" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    </div>
+                     <div class="flex items-center gap-4">
+                        <label class="block text-sm font-medium text-gray-700">Acompanhante?</label>
+                        <input type="checkbox" id="acompanhante" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-4">
+                    <button type="button" id="cancelBtn" class="btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveBtn" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="deleteConfirmModal" class="modal-backdrop hidden">
+        <div class="modal-content max-w-sm">
+             <h3 class="text-xl font-bold mb-4">Confirmar Exclusão</h3>
+             <p>Você tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.</p>
+             <div class="mt-6 flex justify-end gap-4">
+                 <button id="cancelDeleteBtn" class="btn-secondary">Cancelar</button>
+                 <button id="confirmDeleteBtn" class="btn-danger">Excluir</button>
+             </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // Importações do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuração do Firebase - preenchida automaticamente pelo ambiente
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-patient-dashboard';
+
+        // Inicialização dos serviços do Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Referência à coleção no Firestore
+        const patientsCollectionRef = collection(db, `artifacts/${appId}/public/data/patients`);
+
+        // Elementos do DOM
+        const addPatientBtn = document.getElementById('addPatientBtn');
+        const patientModal = document.getElementById('patientModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const patientForm = document.getElementById('patientForm');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const patientList = document.getElementById('patientList');
+        const patientIdField = document.getElementById('patientId');
+        
+        const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+        const loadingIndicator = document.getElementById('loading');
+        const tableContainer = document.getElementById('patientTableContainer');
+        const noDataMessage = document.getElementById('noDataMessage');
+        
+        let patientToDeleteId = null;
+
+        // --- Funções do Modal ---
+        const openModal = (isEdit = false, patientData = {}) => {
+            patientForm.reset();
+            modalTitle.textContent = isEdit ? 'Editar Paciente' : 'Adicionar Novo Paciente';
+            patientIdField.value = isEdit ? patientData.id : '';
+            
+            if (isEdit) {
+                document.getElementById('nome').value = patientData.nome || '';
+                document.getElementById('dataInternacao').value = patientData.dataInternacao || '';
+                document.getElementById('idade').value = patientData.idade || '';
+                document.getElementById('situacao').value = patientData.situacao || '';
+                document.getElementById('classificacao').value = patientData.classificacao || 'Mínimos';
+                document.getElementById('diagnostico').value = patientData.diagnostico || '';
+                document.getElementById('medico').value = patientData.medico || '';
+                document.getElementById('convenio').value = patientData.convenio || 'SUS';
+                document.getElementById('supVentilatorio').value = patientData.supVentilatorio || 'Ar Ambiente';
+                document.getElementById('peleIntegra').checked = patientData.peleIntegra || false;
+                document.getElementById('acompanhante').checked = patientData.acompanhante || false;
+            }
+            
+            patientModal.classList.remove('hidden');
+        };
+
+        const closeModal = () => {
+            patientModal.classList.add('hidden');
+        };
+
+        const openDeleteConfirmModal = (id) => {
+            patientToDeleteId = id;
+            deleteConfirmModal.classList.remove('hidden');
+        };
+
+        const closeDeleteConfirmModal = () => {
+            patientToDeleteId = null;
+            deleteConfirmModal.classList.add('hidden');
+        };
+
+
+        // --- Renderização da Tabela ---
+        const renderPatients = (patients) => {
+            patientList.innerHTML = '';
+            loadingIndicator.classList.add('hidden');
+            tableContainer.classList.remove('hidden');
+
+            if (patients.length === 0) {
+                 noDataMessage.classList.remove('hidden');
+                 return;
+            }
+            noDataMessage.classList.add('hidden');
+            
+            patients.sort((a, b) => (a.nome > b.nome) ? 1 : -1); // Ordena por nome
+
+            patients.forEach(patient => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-3 px-4 text-sm text-gray-800">${patient.situacao || ''}</td>
+                    <td class="py-3 px-4 text-sm font-medium text-gray-900">${patient.nome}</td>
+                    <td class="py-3 px-4 text-sm text-gray-800">${patient.idade}</td>
+                    <td class="py-3 px-4 text-sm text-gray-800">${patient.diagnostico || ''}</td>
+                    <td class="py-3 px-4 text-sm text-gray-800">${patient.dataInternacao ? new Date(patient.dataInternacao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button class="edit-btn text-blue-600 hover:text-blue-800 p-2" data-id="${patient.id}" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn text-red-600 hover:text-red-800 p-2" data-id="${patient.id}" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                patientList.appendChild(row);
+            });
+        };
+
+        // --- CRUD (Create, Read, Update, Delete) ---
+        const getPatients = () => {
+            onSnapshot(patientsCollectionRef, (snapshot) => {
+                const patients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderPatients(patients);
+            }, (error) => {
+                 console.error("Erro ao buscar pacientes: ", error);
+                 loadingIndicator.textContent = 'Erro ao carregar dados.';
+            });
+        };
+
+        const handleFormSubmit = async (e) => {
+            e.preventDefault();
+            const id = patientIdField.value;
+            const patientData = {
+                nome: document.getElementById('nome').value,
+                dataInternacao: document.getElementById('dataInternacao').value,
+                idade: document.getElementById('idade').value,
+                situacao: document.getElementById('situacao').value,
+                classificacao: document.getElementById('classificacao').value,
+                diagnostico: document.getElementById('diagnostico').value,
+                medico: document.getElementById('medico').value,
+                convenio: document.getElementById('convenio').value,
+                supVentilatorio: document.getElementById('supVentilatorio').value,
+                peleIntegra: document.getElementById('peleIntegra').checked,
+                acompanhante: document.getElementById('acompanhante').checked,
+            };
+
+            try {
+                if (id) {
+                    // Atualiza o paciente existente
+                    const patientDocRef = doc(db, `artifacts/${appId}/public/data/patients`, id);
+                    await setDoc(patientDocRef, patientData);
+                } else {
+                    // Adiciona um novo paciente
+                    await addDoc(patientsCollectionRef, patientData);
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Erro ao salvar paciente: ", error);
+                alert("Ocorreu um erro ao salvar. Tente novamente.");
+            }
+        };
+
+        const handleDelete = async () => {
+             if (!patientToDeleteId) return;
+             try {
+                const patientDocRef = doc(db, `artifacts/${appId}/public/data/patients`, patientToDeleteId);
+                await deleteDoc(patientDocRef);
+                closeDeleteConfirmModal();
+             } catch(error) {
+                console.error("Erro ao excluir paciente: ", error);
+                alert("Ocorreu um erro ao excluir. Tente novamente.");
+                closeDeleteConfirmModal();
+             }
+        }
+
+        // --- Event Listeners ---
+        addPatientBtn.addEventListener('click', () => openModal());
+        cancelBtn.addEventListener('click', closeModal);
+        patientForm.addEventListener('submit', handleFormSubmit);
+
+        cancelDeleteBtn.addEventListener('click', closeDeleteConfirmModal);
+        confirmDeleteBtn.addEventListener('click', handleDelete);
+
+        patientList.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
+
+            if (editBtn) {
+                const id = editBtn.dataset.id;
+                // Encontra o paciente na lista para preencher o formulário
+                const row = editBtn.closest('tr');
+                const patientData = {
+                    id,
+                    // Precisamos buscar os dados completos do Firestore para editar
+                    // Isso é um ponto de melhoria, por enquanto, vamos pegar da tabela
+                    // (uma abordagem mais robusta usaria getDoc)
+                    nome: row.cells[1].textContent,
+                    idade: row.cells[2].textContent,
+                    diagnostico: row.cells[3].textContent,
+                    // É preciso buscar o dado completo para ter todos os campos
+                };
+                // Idealmente, buscaria o doc completo antes de abrir o modal
+                 onSnapshot(doc(db, `artifacts/${appId}/public/data/patients`, id), (doc) => {
+                    openModal(true, { id: doc.id, ...doc.data() });
+                });
+            }
+
+            if (deleteBtn) {
+                const id = deleteBtn.dataset.id;
+                openDeleteConfirmModal(id);
+            }
+        });
+        
+        // --- Inicialização ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuário está logado (mesmo que anonimamente)
+                getPatients();
+            } else {
+                // Tenta fazer login anônimo
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Erro no login anônimo:", error);
+                    loadingIndicator.textContent = "Erro de autenticação. Recarregue a página.";
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>
+
