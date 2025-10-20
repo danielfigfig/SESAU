@@ -304,14 +304,14 @@
                 { id: "deficiencia_mental", nome: "Deficiência mental", descricao: "Qualquer condição que afete o desenvolvimento intelectual ou a saúde mental, necessitando de suporte contínuo.", escoreBase: 3, tipo: "sim_nao" },
                 { id: "baixas_condicoes_saneamento", nome: "Baixas condições de saneamento", descricao: "Domicílio sem acesso à rede de esgoto ou fossa séptica, e/ou sem coleta de lixo regular.", escoreBase: 3, tipo: "sim_nao" },
                 { id: "desnutricao_grave", nome: "Desnutrição grave", descricao: "Indivíduo com diagnóstico clínico ou indicadores antropométricos (peso/altura) de desnutrição grave.", escoreBase: 3, tipo: "sim_nao" },
-                { id: "drogadicao", nome: "Drogadição", descricao: "Uso abusivo de substâncias psicoativas por um ou mais membros, com impacto negativo na dinâmica familiar.", escoreBase: 2, tipo: "sim_nao" },
+                { id: "drogadicao", nome: "Drogadição", descricao: "Utilização compulsiva de drogas lícitas ou ilícitas, que apresentem potencial para causar dependência química (àlcool, tabaco, benzodiazepínicos, barbitúricos e drogas ilícitas).", escoreBase: 2, tipo: "sim_nao" },
                 { id: "desemprego", nome: "Desemprego", descricao: "Principal provedor da família ou múltiplos membros adultos sem emprego formal ou fonte de renda estável.", escoreBase: 2, tipo: "sim_nao" },
                 { id: "analfabetismo", nome: "Analfabetismo", descricao: "Membros adultos da família que não sabem ler ou escrever, dificultando o acesso à informação e serviços.", escoreBase: 1, tipo: "sim_nao" },
                 { id: "menor_6_meses", nome: "Menor de 6 meses", descricao: "Presença de criança com menos de 6 meses no domicílio, período de maior vulnerabilidade.", escoreBase: 1, tipo: "sim_nao" },
                 { id: "maior_70_anos", nome: "Maior de 70 anos", descricao: "Presença de idoso com 70 anos ou mais, que pode apresentar maior fragilidade e necessidade de acompanhamento.", escoreBase: 1, tipo: "sim_nao" },
                 { id: "hipertensao", nome: "Hipertensão arterial sistêmica", descricao: "Presença de membro(s) com diagnóstico de HAS, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
                 { id: "diabetes", nome: "Diabetes Mellitus", descricao: "Presença de membro(s) com diagnóstico de DM, especialmente sem acompanhamento regular.", escoreBase: 1, tipo: "sim_nao" },
-                { id: "densidade_domiciliar", nome: "Relação morador/cômodo", descricao: "Relação entre o número de moradores e o de cômodos da casa (excluindo banheiros e áreas de serviço).", tipo: "densidade", fixedMultiplier: 1 } 
+                { id: "densidade_domiciliar", nome: "Relação morador/cômodo", descricao: "Número de moradores na residência dividido pelo número de cômodos do domicílio. São considerados cômodos todos os compartimentos integrantes do domicílio, inclusive banheiro e cozinha, separados por paredes, e os existentes na parte externa do prédio, desde que constituam parte integrante do domicílio, com exceção de corredores, alpendres, varandas abertas, garagens, depósitos.", tipo: "densidade", fixedMultiplier: 1 } 
             ],
             selectors: {
                 riskTableBody: '#escalaRiscoTable tbody',
@@ -819,3 +819,4 @@
     </script>
 </body>
 </html>
+
