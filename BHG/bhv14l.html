@@ -137,7 +137,7 @@
         
         const numberOfBeds = 10;
         let lastFocusedInput;
-        let debounceTimer;
+        let debounceTimers = {};
         let fileToImport = null;
 
         const generateBedHTML = () => {
@@ -305,8 +305,8 @@
                 setTimeout(() => { statusIndicator.classList.remove('visible'); }, 2000);
             };
 
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(saveData, 500);
+            clearTimeout(debounceTimers[bedIndex]);
+            debounceTimers[bedIndex] = setTimeout(saveData, 500);
         }
 
         function loadAllBedsData() {
@@ -440,6 +440,21 @@
             }
         });
 
+        // Garante que salve imediatamente se o usuário tentar fechar a página ou atualizar
+        window.addEventListener('beforeunload', () => {
+            for (let i = 0; i < numberOfBeds; i++) {
+                if (debounceTimers[i]) {
+                    clearTimeout(debounceTimers[i]);
+                    const pane = bedsContent.querySelector(`#bed-${i}`);
+                    if (pane) {
+                        calculateAllTotals(pane);
+                        const data = getBedDataFromPane(pane);
+                        localStorage.setItem(`bhsync-bed-${i}`, JSON.stringify(data));
+                    }
+                }
+            }
+        });
+
         // Handles keyboard shortcuts
         appContainer.addEventListener('keydown', function(event) {
             if (!lastFocusedInput || !lastFocusedInput.closest('.bed-pane')) return;
@@ -449,7 +464,38 @@
             const tableBody = lastFocusedInput.closest('tbody');
             if (!tableBody) return;
 
-            if (event.key === 'Enter') {
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                const currentCell = lastFocusedInput.closest('td');
+                const currentRow = currentCell.closest('tr');
+                const allRows = Array.from(tableBody.querySelectorAll('tr.data-row'));
+                const cellIndex = Array.from(currentRow.children).indexOf(currentCell);
+                const rowIndex = allRows.indexOf(currentRow);
+                
+                let nextInput = null;
+
+                if (event.key === 'ArrowUp' && rowIndex > 0) {
+                    event.preventDefault();
+                    nextInput = allRows[rowIndex - 1].children[cellIndex]?.querySelector('.data-input:not([readonly])');
+                } else if (event.key === 'ArrowDown' && rowIndex < allRows.length - 1) {
+                    event.preventDefault();
+                    nextInput = allRows[rowIndex + 1].children[cellIndex]?.querySelector('.data-input:not([readonly])');
+                } else if (event.key === 'ArrowLeft') {
+                    for (let i = cellIndex - 1; i >= 0; i--) {
+                        let candidate = currentRow.children[i]?.querySelector('.data-input:not([readonly])');
+                        if (candidate) { nextInput = candidate; break; }
+                    }
+                } else if (event.key === 'ArrowRight') {
+                    for (let i = cellIndex + 1; i < currentRow.children.length; i++) {
+                        let candidate = currentRow.children[i]?.querySelector('.data-input:not([readonly])');
+                        if (candidate) { nextInput = candidate; break; }
+                    }
+                }
+                
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                }
+            } else if (event.key === 'Enter') {
                 event.preventDefault();
                 const currentCell = lastFocusedInput.closest('td');
                 const currentRow = currentCell.closest('tr');
